@@ -13,7 +13,7 @@ class ClassroomController extends Controller
     {
 
         $existingClass = DB::table('classrooms')
-            ->where('grade_id', $request->grade_id)
+            // ->where('grade_id', $request->grade_id)
             ->where('year_id', $request->year_id)
             ->where('campus_id', $request->campus_id)
             ->exists();

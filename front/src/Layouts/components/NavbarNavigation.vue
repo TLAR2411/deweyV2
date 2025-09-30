@@ -35,7 +35,10 @@ watch(
 );
 
 const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
-const user_role_id = ref(user.value.role_id);
+
+const user_role_id = ref(parseInt(user.value.role_id));
+
+const userEmail = ref(user.value.email);
 
 const authStore = useStore();
 
@@ -99,6 +102,7 @@ const routeClick = (route1) => {
     router.push({ name: route1.name });
   }
 };
+console.log(typeof user_role_id.value);
 </script>
 <template>
   <div>
@@ -443,13 +447,18 @@ const routeClick = (route1) => {
             ></v-list-item>
 
             <v-list-item
+              v-if="
+                userEmail != 'admin_dis_ochar@gmail.com' &&
+                userEmail != 'admin_dis_bmc@gmail.com'
+              "
               value="Semester List"
               title="ការកំណត់ឆមាស"
               class="text-body-4 mt-1 mx-1 rounded-lg"
               prepend-icon="mdi-plus"
               color="green-darken-4"
               @click="routeClick('SemesterList')"
-            ></v-list-item>
+            >
+            </v-list-item>
             <!-- 
             <v-list-item
               value="SettingScoreList"

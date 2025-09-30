@@ -71,7 +71,7 @@ const handleLogin = async () => {
 };
 </script>
 
-<template>
+<!-- <template>
   <div style="width: 100vw; height: 100vh">
     <LetterGlitch
       :glitchSpeed="50"
@@ -79,7 +79,6 @@ const handleLogin = async () => {
       :outerVignette="false"
       :smooth="true"
     >
-      <!-- This content will now appear on top of the glitch background -->
       <v-card
         class="mx-auto px-10 py-5"
         style="
@@ -153,13 +152,17 @@ const handleLogin = async () => {
       </v-card>
     </LetterGlitch>
   </div>
-</template>
+</template> -->
 
-<!-- <template>
+<template>
   <div class="div">
-    <v-card class="mx-auto px-10 py-5" style="margin-top: 80px" max-width="400">
+    <v-card
+      class="mx-auto px-10 py-5 bg-green-lighten-5"
+      style="margin-top: 80px"
+      max-width="400"
+    >
       <v-card-title
-        class="​ customKhmerMoul"
+        class="customKhmerMoul"
         style="
           font-size: 23px;
           color: green;
@@ -216,9 +219,8 @@ const handleLogin = async () => {
       </form>
     </v-card>
   </div>
-</template> -->
-
-<!-- <style scoped>
+</template>
+<style scoped>
 .div {
   height: 100vh;
   padding-top: 8%;
@@ -232,4 +234,4 @@ const handleLogin = async () => {
   background-size: cover;
   background-attachment: local;
 }
-</style> -->
+</style>

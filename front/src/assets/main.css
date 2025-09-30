@@ -14,7 +14,7 @@
 }
 
 .custom-swal-title {
-  font-family: "fontOsSiemreap" !important;
+  font-family: "Siemreap", sans-serif !important;
   font-size: 17px;
   text-align: center;
 }
@@ -25,7 +25,7 @@
   background-color: #363b59;
 }
 .custom-delete-swal-title {
-  font-family: "fontOsSiemreap" !important;
+  font-family: "Siemreap", sans-serif !important;
   font-size: 17px;
   text-align: center;
   color: #8388a4;

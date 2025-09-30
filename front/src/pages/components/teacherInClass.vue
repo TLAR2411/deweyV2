@@ -327,20 +327,22 @@ onMounted(() => {
           >
           <VCardText class="mt-5">
             <VTextField
+              :v-model:search="search"
               label="ថ្នាក់ទី"
               variant="outlined"
               density="compact"
               readonly
               v-model="dataClass[0].grade_name"
             />
-            <VSelect
-              label="ឈ្មោះគ្រូបង្រៀន"
+            <VAutocomplete
+              v-model="form.teacherId"
               :items="teachers"
               item-title="kh_name"
               item-value="id"
+              label="ឈ្មោះគ្រូបង្រៀន"
               variant="outlined"
               density="compact"
-              v-model="form.teacherId"
+              clearable
             />
             <VSelect
               label="មុខវិជ្ជា"

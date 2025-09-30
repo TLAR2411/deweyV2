@@ -1,34 +1,29 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\ExportReport;
 
-use Illuminate\Http\Request;
+use App\Exports\SecondaryExport;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
-class ReportScoreUpperController extends Controller
+class SecondaryExportController extends Controller
 {
-    /**
-     * Main function to handle all types of score views:
-     * - Monthly
-     * - Semester 1
-     * - Semester 2
-     * - Full Year
-     */
-    public function viewUpper(Request $request)
+    public function viewSecondary(Request $request)
     {
         $class_id = $request->class_id;
         $type = $request->type;
         $month_id = $request->month_id;
         $campus_id = $request->campus_id;
         $year_id = $request->year_id;
+        // $avg_mutil = $request->avg_m;
 
-        // Get the selected month name
         $month_name = DB::table('month')
             ->where('month.id', $month_id)
             ->select('month.name_kh')
             ->get();
 
-        // Get classroom info (grade and academic year)
         $info = DB::table('classrooms')
             ->leftJoin('grades as g', 'classrooms.grade_id', '=', 'g.id')
             ->leftJoin('academicyears as year', 'classrooms.year_id', '=', 'year.id')
@@ -39,66 +34,82 @@ class ReportScoreUpperController extends Controller
             ])
             ->get();
 
-        // Count total students and female students
-        $allStudent = DB::table('student_class')->where('class_id', $class_id)->where('deleted', 0)->count();
-
-        $student_female = DB::table('students as s')
-            ->leftJoin('student_class as sc', 's.id', '=', 'sc.student_id')
-            ->where('sc.class_id', $class_id)
-            ->where('sc.deleted', 0)
-            ->whereIn('s.gender', ['F', '2']) // Khmer '2' = female
-            ->count();
-
         $gradeId = DB::table('classrooms')->where('id', $class_id)->first()->grade_id ?? '';
         // dd($gradeId);
         $class = DB::table('grades')->where('id', $gradeId)->first();
 
+        $allStudent = DB::table('student_class')->where('class_id', $class_id)->where('deleted', 0)->count();
 
-        // Handle different report types
+        $student_female = DB::table('students as s')
+            ->leftJoin('student_class as sc', 's.id', '=', 'sc.student_id')
+            ->leftJoin('classrooms as c', 'sc.class_id', '=', 'c.id')
+            ->where('c.id', $class_id)
+            ->where('sc.deleted', 0)
+            ->whereIn('s.gender', ['F', '2'])
+            ->count();
+
         switch ($type) {
-
             case 'month':
                 $data = $this->fetchMonthData($class_id, $month_id);
                 return $this->processAndRespond($data, 'ខែ', 'successful month', $info, $month_name, $allStudent, $student_female);
-
             case 'semester1':
                 $data = $this->getSemesterOne($class_id, $class->grade_level_id ?? '', $year_id, $campus_id);
-                return response()->json([
-                    'type' => "ឆមាសទី១",
-                    'data' => $data,
-                    'info' => $info,
-                    'allStudent' => $allStudent,
-                    'student_female' => $student_female
-                ]);
+
+                $filename = 'ពិន្ទុប្រចាំ'  . '.xlsx';
+                $data = Excel::download(new SecondaryExport(
+                    $allStudent,
+                    $info,
+                    $data,
+                    'ឆមាសទី១',
+                    $student_female,
+                    $month_name,
+                    $type,
+                    $class->grade_level_id ?? ''
+
+                ), $filename);
+                ob_get_clean();
+                return $data;
+                // return response()->json([
+                //     'type' => "ឆមាសទី១",
+                //     'data' => $data,
+                //     'info' => $info,
+                //     'allStudent' => $allStudent,
+                //     'student_female' => $student_female
+                // ]);
 
             case 'semester2':
-                $data = $this->getSemester2($class_id,  $year_id, $campus_id);
-                return response()->json([
-                    'type' => "ឆមាសទី២",
-                    'data' => $data,
-                    'info' => $info,
-                    'allStudent' => $allStudent,
-                    'student_female' => $student_female
-                ]);
+                $data = $this->getSemester2($class_id, $year_id, $campus_id);
+                $filename = 'ពិន្ទុប្រចាំ'  . '.xlsx';
+                $data = Excel::download(new SecondaryExport(
+                    $allStudent,
+                    $info,
+                    $data,
+                    'ឆមាសទី១',
+                    $student_female,
+                    $month_name,
+                    $type,
+                    $class->grade_level_id ?? ''
 
-            default: // Full Year
-                return $this->processFullYear($class_id, $info, $allStudent, $student_female, $class->grade_level_id ?? '', $year_id, $campus_id);
+                ), $filename);
+                ob_get_clean();
+                return $data;
+                // return response()->json([
+                //     'type' => "ឆមាសទី២",
+                //     'data' => $data,
+                //     'info' => $info,
+                //     'allStudent' => $allStudent,
+                //     'student_female' => $student_female,
+                //     // 'yearId' => $year_id
+                // ]);
+
+            default:
+                return $this->processFullYear($class_id, $info, $allStudent, $student_female, $year_id, $campus_id,  $class->grade_level_id ?? '');
         }
     }
 
-    /**
-     * Fetch scores for students in a specific month and group them
-     * 
-     * Why:
-     * - Used to get score data of students for a given month
-     * - It groups results by student for display
-     * 
-     * Example:
-     * fetchMonthData(5, 1) => all student scores in class 5 for January
-     */
     private function fetchMonthData($class_id, $month_id)
     {
-        return DB::table('score_upper_cc as score')
+        return DB::table('score_secondary_cc as score')
             ->join('students as s', 'score.student_id', '=', 's.id')
             ->select(
                 's.id as student_id',
@@ -108,15 +119,18 @@ class ReportScoreUpperController extends Controller
                 's.photo_path',
                 'score.class_id',
                 'score.khmer',
+                'score.essay',
+                'score.writing',
                 'score.morality',
                 'score.history',
                 'score.geography',
+                'score.geology',
                 'score.math',
                 'score.physical',
                 'score.chemistry',
                 'score.biology',
-                'score.earth_science',
                 'score.english',
+                'score.house_education',
                 'score.pe',
                 'score.computer',
                 DB::raw('SUM(score.total_score) as total_score'),
@@ -132,15 +146,18 @@ class ReportScoreUpperController extends Controller
                 's.photo_path',
                 'score.class_id',
                 'score.khmer',
+                'score.essay',
+                'score.writing',
                 'score.morality',
                 'score.history',
                 'score.geography',
+                'score.geology',
                 'score.math',
                 'score.physical',
                 'score.chemistry',
                 'score.biology',
-                'score.earth_science',
                 'score.english',
+                'score.house_education',
                 'score.pe',
                 'score.computer',
             )
@@ -148,87 +165,74 @@ class ReportScoreUpperController extends Controller
             ->toArray();
     }
 
-    /**
-     * Format and respond with ranking, grade, and student details
-     * 
-     * Why:
-     * - Used after fetching data to prepare response
-     * - Adds rank and grade info
-     * 
-     * Example:
-     * processAndRespond(data, 'ខែ', ...) => returns json with formatted results
-     */
     private function processAndRespond($data, $type, $successMessage, $info, $month_name, $allStudent, $student_female)
     {
         if (empty($data)) {
-            return response()->json(['status' => 1, 'message' => 'UnSuccessfully']);
+            return response()->json(['status' => 1, 'message' => 'UnSuccesfully']);
         }
 
         $processed = $this->formatData($data, $type);
         $sorted = $this->sortAndRank($processed, 'avg');
 
-        return response()->json([
-            'status' => 200,
-            'data' => $sorted,
-            'message' => $successMessage,
-            'type' => $type,
-            'info' => $info,
-            'month' => $month_name,
-            'allStudent' => $allStudent,
-            'student_female' => $student_female
-        ]);
+        $filename = 'ពិន្ទុប្រចាំ'  . '.xlsx';
+
+        $data = Excel::download(new SecondaryExport(
+            $allStudent,
+            $info,
+            $sorted,
+            $successMessage,
+            $student_female,
+            $month_name,
+            $type,
+            '',
+        ), $filename);
+        ob_get_clean();
+        return $data;
+
+        // return response()->json([
+        //     'status' => 200,
+        //     'data' => $sorted,
+        //     'message' => $successMessage,
+        //     'type' => $type,
+        //     'info' => $info,
+        //     'month' => $month_name,
+        //     'allStudent' => $allStudent,
+        //     'student_female' => $student_female
+        // ]);
     }
 
-    /**
-     * Format raw score data to include grade and clean average numbers
-     * 
-     * Why:
-     * - Helps front-end to show score with Khmer grade and cleaned values
-     * 
-     * Example:
-     * formatData([{ avg: 45.66 }]) => adds grade: 'ល្អណាស់'
-     */
     public function formatData($data, $type)
     {
         return array_map(function ($student) use ($type) {
             return [
-
                 'student_id' => $student->student_id,
                 'kh_name' => $student->kh_name,
                 'en_name' => $student->en_name,
                 'gender' => $student->gender,
                 'class_id' => $student->class_id,
-                'total_score' => $student->total_score,                // 'total_score' => number_format($student->total_score, 2, '.', ''),
+                'total_score' => number_format($student->total_score, 2, '.', ''),
                 'avg' => number_format($student->total_avg, 2, '.', ''),
-                'grade' => $this->getGradeUpper($student->total_avg),
+                'grade' => $this->getGradeSecondary(number_format($student->total_avg)),
                 'photo_path' => $student->photo_path,
                 "khmer" => $student->khmer,
+                "writing" => $student->writing,
+                "essay" => $student->essay,
                 'math' => $student->math,
                 'morality' => $student->morality,
                 'history' => $student->history,
                 'geography' => $student->geography,
+                'geology' => $student->geology,
                 'physical' => $student->physical,
                 'chemistry' => $student->chemistry,
                 'biology' => $student->biology,
-                'earth_science' => $student->earth_science,
                 'english' => $student->english,
                 'pe' => $student->pe,
                 'computer' => $student->computer,
-                // how to take subject score = fetchMondata(groupby function)
+                'house_education' => $student->house_education,
                 'type' => $type,
             ];
         }, $data);
     }
-
-    /**
-     * Sorts students by score average and assigns rank
-     * 
-     * Why:
-     * - So students can be ordered by performance (highest to lowest)
-     * 
-     * Example:
-     * sortAndRank(data, 'avg') => adds 'rank' to each student
-     */
     private function sortAndRank($data, $sortKey)
     {
         usort($data, fn($a, $b) => $b[$sortKey] <=> $a[$sortKey]);
@@ -245,39 +249,34 @@ class ReportScoreUpperController extends Controller
         return $data;
     }
 
-    /**
-     * Get scores for Semester 1 using 3-month avg and final month
-     * 
-     * Why:
-     * - Semester 1 result = (Nov + Dec + Jan)/3 + Feb
-     * - Final avg = (avg_3_months + final_month_avg) / 2
-     * 
-     * Example:
-     * getSemesterOne(5) => all student avg in Semester 1 for class 5
-     */
-    public function getGradeUpper($avg)
+    public function getGradeSecondary($avg)
     {
-        if ($avg >= 48.00) return "ល្អប្រសើរ";
-        elseif ($avg >= 46.00) return "ល្អណាស់";
-        elseif ($avg >= 40.00) return "ល្អ";
-        elseif ($avg >= 32.50) return "ល្អបង្គួរ";
-        elseif ($avg >= 25.00) return "មធ្យម";
-        return "ធ្លាក់";
+        $grade = "";
+
+        if ($avg >= 48.00 || $avg >= 50.00) {
+            $grade = "ល្អប្រសើរ";
+        } elseif ($avg >= 45.99 || $avg >= 47.99) {
+
+            $grade = "ល្អណាស់";
+        } elseif ($avg >= 40.00 || $avg >= 44.99) {
+
+            $grade = "ល្អ";
+        } elseif ($avg >= 32.50 || $avg >= 39.99) {
+
+            $grade = "ល្អបង្គួរ";
+        } elseif ($avg >= 25.00 || $avg >= 32.49) {
+            $grade = "មធ្យម";
+        } else {
+            $grade = "ធ្លាក់";
+        }
+
+        return $grade;
     }
 
-    /**
-     * Get scores for Semester 1 using 3-month avg and final month
-     * 
-     * Why:
-     * - Semester 1 result = (Nov + Dec + Jan)/3 + Feb(average)
-     * - Final avg = (avg_3_months + semester_month_avg) / 2
-     * 
-     * Example:
-     * getSemesterOne(5) => all student avg in Semester 1 for class 5
-     */
     private function getSemesterOne($class_id, $grade_level, $year_id, $campus_id)
     {
-        // $months = [11, 12, 1, 2]; // Nov-Feb
+
+        // $months = [11, 12, 1, 2];
         // $semester_data = [];
 
         // Get semester months configuration from database
@@ -306,12 +305,14 @@ class ReportScoreUpperController extends Controller
 
         $all_months = array_merge($three_months, [$month_semester]);
 
-
         $semester_data = [];
 
+        // return response()->json($all_months);
+
         //fetch and process all months
+
         foreach ($all_months as $m) {
-            $month_data = DB::table('score_upper_cc as s_score')
+            $month_data = DB::table('score_secondary_cc as s_score')
                 ->join('students as s', 's_score.student_id', '=', 's.id')
                 ->where('class_id', $class_id)
                 ->where('month_id', $m)
@@ -333,20 +334,20 @@ class ReportScoreUpperController extends Controller
                         'total_semester_month' => 0
                     ];
                 }
-                if ($m == $month_semester) {
+                if ($m ==  $month_semester) {
                     $semester_data[$id]['total_semester_month'] = $avg;
-
-                    // February: store semester month avg + subjects
-                    $semester_data[$id]['total_semester_month'] = $avg;
-                    $semester_data[$id]['khmer'] = $student->khmer;
+                    $semester_data[$id]['writing'] = $student->writing;
+                    $semester_data[$id]['essay'] = $student->essay;
                     $semester_data[$id]['morality'] = $student->morality;
+                    $semester_data[$id]['khmer'] = $student->khmer;
                     $semester_data[$id]['history'] = $student->history;
                     $semester_data[$id]['geography'] = $student->geography;
                     $semester_data[$id]['math'] = $student->math;
                     $semester_data[$id]['physical'] = $student->physical;
                     $semester_data[$id]['chemistry'] = $student->chemistry;
                     $semester_data[$id]['biology'] = $student->biology;
-                    $semester_data[$id]['earth_science'] = $student->earth_science;
+                    $semester_data[$id]['geology'] = $student->geology;
+                    $semester_data[$id]['house_education'] = $student->house_education;
                     $semester_data[$id]['english'] = $student->english;
                     $semester_data[$id]['pe'] = $student->pe;
                     $semester_data[$id]['computer'] = $student->computer;
@@ -358,35 +359,36 @@ class ReportScoreUpperController extends Controller
         }
 
         $result = array_map(function ($student) {
-
             $total_avg_year = number_format(($student['total_avg_3_month'] + $student['total_semester_month']) / 2, 2, '.', '');
             return [
                 'student_id' => $student['student_id'],
                 'kh_name' => $student['kh_name'],
                 'en_name' => $student['en_name'],
-                'gender' => $student['gender'],
                 'photo_path' => $student['photo_path'],
-
+                'gender' => $student['gender'],
                 'average_3_month' => number_format($student['total_avg_3_month'], 2, '.', ''),
                 'average_month_semester' => number_format($student['total_semester_month'], 2, '.', ''),
                 'average_semester1' => $total_avg_year,
                 'average_semester2' => 0,
-                'grade' => $this->getGradeUpper($total_avg_year),
+                'grade' => $this->getGradeSecondary(avg: $total_avg_year),
                 'type' => 'Semester1',
-                // Only from month 2 (February)
                 'khmer' => $student['khmer'] ?? 0,
+                'math' => $student['math'] ?? 0,
                 'morality' => $student['morality'] ?? 0,
                 'history' => $student['history'] ?? 0,
                 'geography' => $student['geography'] ?? 0,
-                'math' => $student['math'] ?? 0,
                 'physical' => $student['physical'] ?? 0,
                 'chemistry' => $student['chemistry'] ?? 0,
                 'biology' => $student['biology'] ?? 0,
-                'earth_science' => $student['earth_science'] ?? 0,
+                'writing' => $student['writing'] ?? 0,
+                'essay' => $student['essay'] ?? 0,
+                'geology' => $student['geology'] ?? 0,
+                'house_education' => $student['house_education'] ?? 0,
                 'english' => $student['english'] ?? 0,
                 'pe' => $student['pe'] ?? 0,
                 'computer' => $student['computer'] ?? 0,
                 'total_score' => $student['total_score'] ?? 0,
+
             ];
         }, array_values(($semester_data)));
 
@@ -395,6 +397,8 @@ class ReportScoreUpperController extends Controller
         $result = $this->addRank($result, 'average_month_semester', 'rank_month_semester');
         $result = $this->addRank($result, 'average_semester1', 'rank');
         $result = $this->addRank($result, 'khmer', 'rankKhmer');
+        $result = $this->addRank($result, 'writing', 'rankWriting');
+        $result = $this->addRank($result, 'essay', 'rankEssay');
         $result = $this->addRank($result, 'morality', 'rankMorality');
         $result = $this->addRank($result, 'history', 'rankHistory');
         $result = $this->addRank($result, 'geography', 'rankGeography');
@@ -402,22 +406,11 @@ class ReportScoreUpperController extends Controller
         $result = $this->addRank($result, 'physical', 'rankPhysic');
         $result = $this->addRank($result, 'chemistry', 'rankChemistry');
         $result = $this->addRank($result, 'biology', 'rankBiology');
-        $result = $this->addRank($result, 'earth_science', 'rankEarth');
+        $result = $this->addRank($result, 'geology', 'rankGeology');
         $result = $this->addRank($result, 'pe', 'rankPe');
         $result = $this->addRank($result, 'english', 'rankEnglish');
         $result = $this->addRank($result, 'computer', 'rankComputer');
-
-        usort($result, fn($a, $b) => $b['average_semester1'] <=> $a['average_semester1']);
-        $rank = 1;
-        foreach ($result as $i => &$student) {
-            if ($i === 0) {
-                $student['rank'] = $rank;
-            } else if ($student['average_semester1'] === $result[$i - 1]['average_semester1']) {
-                $student['rank'] = $result[$i - 1]['rank'];
-            } else {
-                $student['rank'] = $i + 1;
-            }
-        }
+        $result = $this->addRank($result, 'house_education', 'rankHouseEducation');
         return $result;
     }
 
@@ -453,26 +446,18 @@ class ReportScoreUpperController extends Controller
         return $data;
     }
 
-    /**
-     * Get scores for Semester 2 with 3 months avg + final month
-     * 
-     * Why:
-     * - Same logic as semester1 but months vary by grade
-     * - Grade 12 uses Mar-Jun, others use May-Aug
-     * 
-     * Example:
-     * getSemester2(5) => semester 2 score for class 5
-     */
     private function getSemester2($class_id, $year_id, $campus_id)
     {
         $gradeId = DB::table('classrooms')->where('id', $class_id)->first()->grade_id ?? '';
         $gradeLevel = DB::table('grades')->where('id', $gradeId)->first()->grade_level_id ?? '';
 
+
+
         // Get semester months configuration from database
         $semesterConfig = DB::table('setting_semester_list')
             // ->where('setting_semester_list.campus_id', $campus_id)
             ->where('setting_semester_list.year_id', $year_id)
-            ->where('setting_semester_list.grade_level_id',  $gradeLevel)
+            ->where('setting_semester_list.grade_level_id', $gradeLevel)
             ->first();
 
         if (!$semesterConfig) {
@@ -494,21 +479,22 @@ class ReportScoreUpperController extends Controller
 
         $months  = array_merge($three_months, [$month_semester]);
 
-        // $months = $gradeLevel == 12 ? [3, 4, 5, 6] : [5, 6, 7, 8];
-        // $finalMonth = end($months);
-        $finalMonth = $month_semester;
 
-        // print_r($finalMonth);
+        // $months = $gradeLevel == 9 ? [3, 4, 5, 6] : [5, 6, 7, 8];
+
+        $finalMonth = end($months);
 
         $semesterData = $this->processMonths($class_id, $months, $finalMonth);
         if ($semesterData === 0) return 0;
         $result = $this->formatResults($semesterData);
-        // $this->rankResults($result);
+        $this->rankResults($result);
 
         $result = $this->addRank($result, 'average_3_month', 'rank_3_month');
         $result = $this->addRank($result, 'average_month_semester', 'rank_month_semester');
         $result = $this->addRank($result, 'average_semester2', 'rank');
         $result = $this->addRank($result, 'khmer', 'rankKhmer');
+        $result = $this->addRank($result, 'writing', 'rankWriting');
+        $result = $this->addRank($result, 'essay', 'rankEssay');
         $result = $this->addRank($result, 'morality', 'rankMorality');
         $result = $this->addRank($result, 'history', 'rankHistory');
         $result = $this->addRank($result, 'geography', 'rankGeography');
@@ -516,43 +502,20 @@ class ReportScoreUpperController extends Controller
         $result = $this->addRank($result, 'physical', 'rankPhysic');
         $result = $this->addRank($result, 'chemistry', 'rankChemistry');
         $result = $this->addRank($result, 'biology', 'rankBiology');
-        $result = $this->addRank($result, 'earth_science', 'rankEarth');
+        $result = $this->addRank($result, 'geology', 'rankGeology');
         $result = $this->addRank($result, 'pe', 'rankPe');
         $result = $this->addRank($result, 'english', 'rankEnglish');
         $result = $this->addRank($result, 'computer', 'rankComputer');
-
-        usort($result, fn($a, $b) => $b['average_semester2'] <=> $a['average_semester2']);
-        $rank = 1;
-        foreach ($result as $i => &$student) {
-            if ($i === 0) {
-                $student['rank'] = $rank;
-            } else if ($student['average_semester2'] === $result[$i - 1]['average_semester2']) {
-                $student['rank'] = $result[$i - 1]['rank'];
-            } else {
-                $student['rank'] = $i + 1;
-            }
-        }
+        $result = $this->addRank($result, 'house_education', 'rankHouseEducation');
 
         return $result;
     }
 
-
-    /**
-     * Build score data from given months for semester 2
-     * 
-     * Why:
-     * - Helper for getSemester2()
-     * - Adds up average scores for 3 months + final month
-     *
-     * Example:
-     * processMonths(5, [5,6,7,8], 8)
-     */
     private function processMonths($class_id, $months, $finalMonth)
     {
         $semesterData = [];
-
         foreach ($months as $m) {
-            $monthData = DB::table('score_upper_cc as s_score')
+            $monthData = DB::table('score_secondary_cc as s_score')
                 ->join('students as s', 's_score.student_id', '=', 's.id')
                 ->where('class_id', $class_id)
                 ->where('month_id', $m)
@@ -561,19 +524,9 @@ class ReportScoreUpperController extends Controller
 
             if (empty($monthData)) return 0;
 
-            // 👉 Track which students have already been added for this month
-            $seenThisMonth = [];
-
             foreach ($monthData as $student) {
                 $id = $student->id;
                 $avg = $student->total_avg;
-
-                // 👇 Only sum 1 time per student per month
-                if (isset($seenThisMonth[$id])) {
-                    continue; // skip if already added in this month
-                }
-
-                $seenThisMonth[$id] = true;
 
                 if (!isset($semesterData[$id])) {
                     $semesterData[$id] = (array) $student + [
@@ -582,19 +535,20 @@ class ReportScoreUpperController extends Controller
                         'total_semester_month' => 0,
                     ];
                 }
-
                 if ($m == $finalMonth) {
                     $semesterData[$id]['total_semester_month'] = $avg;
-                    // $semester_data[$id]['total_semester_month'] = $avg;
-                    $semesterData[$id]['khmer'] = $student->khmer;
+                    $semesterData[$id]['writing'] = $student->writing;
+                    $semesterData[$id]['essay'] = $student->essay;
                     $semesterData[$id]['morality'] = $student->morality;
+                    $semesterData[$id]['khmer'] = $student->khmer;
                     $semesterData[$id]['history'] = $student->history;
                     $semesterData[$id]['geography'] = $student->geography;
                     $semesterData[$id]['math'] = $student->math;
                     $semesterData[$id]['physical'] = $student->physical;
                     $semesterData[$id]['chemistry'] = $student->chemistry;
                     $semesterData[$id]['biology'] = $student->biology;
-                    $semesterData[$id]['earth_science'] = $student->earth_science;
+                    $semesterData[$id]['geology'] = $student->geology;
+                    $semesterData[$id]['house_education'] = $student->house_education;
                     $semesterData[$id]['english'] = $student->english;
                     $semesterData[$id]['pe'] = $student->pe;
                     $semesterData[$id]['computer'] = $student->computer;
@@ -602,21 +556,14 @@ class ReportScoreUpperController extends Controller
                 } else {
                     $semesterData[$id]['total_avg_3_month'] += $avg / 3;
                 }
+                // $m == $finalMonth
+                //     ? $semesterData[$id]['total_semester_month'] = $avg
+                //     : $semesterData[$id]['total_avg_3_month'] += $avg / 3;
             }
         }
-
         return $semesterData;
     }
 
-    /**
-     * Format processed semester data into structured student info
-     * 
-     * Why:
-     * - Used by getSemester2 to finalize response
-     *
-     * Example:
-     * formatResults(semesterData) => returns student avg with grades
-     */
     private function formatResults($semesterData)
     {
         return array_map(function ($student) {
@@ -631,35 +578,29 @@ class ReportScoreUpperController extends Controller
                 'average_month_semester' => number_format($student['total_semester_month'], 2, '.', ''),
                 'average_semester2' => $averageSemester,
                 'average_semester1' => 0,
-                'grade' => $this->getGradeUpper($averageSemester),
+                'grade' => $this->getGradeSecondary($averageSemester),
                 'type' => "semester2",
                 'khmer' => $student['khmer'] ?? 0,
+                'math' => $student['math'] ?? 0,
                 'morality' => $student['morality'] ?? 0,
                 'history' => $student['history'] ?? 0,
                 'geography' => $student['geography'] ?? 0,
-                'math' => $student['math'] ?? 0,
                 'physical' => $student['physical'] ?? 0,
                 'chemistry' => $student['chemistry'] ?? 0,
                 'biology' => $student['biology'] ?? 0,
-                'earth_science' => $student['earth_science'] ?? 0,
+                'writing' => $student['writing'] ?? 0,
+                'essay' => $student['essay'] ?? 0,
+                'geology' => $student['geology'] ?? 0,
+                'house_education' => $student['house_education'] ?? 0,
                 'english' => $student['english'] ?? 0,
                 'pe' => $student['pe'] ?? 0,
                 'computer' => $student['computer'] ?? 0,
                 'total_score' => $student['total_score'] ?? 0,
+
             ];
         }, array_values($semesterData));
     }
 
-
-    /**
-     * Add rank based on semester 2 score
-     * 
-     * Why:
-     * - Used after formatting to show student positions
-     *
-     * Example:
-     * rankResults(results) => adds rank to each student
-     */
     private function rankResults(&$result)
     {
         usort($result, fn($a, $b) => $b['average_semester2'] <=> $a['average_semester2']);
@@ -675,35 +616,18 @@ class ReportScoreUpperController extends Controller
         }
     }
 
-
-    /**
-     * Combine semester 1 + 2 for full year average and grade
-     * 
-     * Why:
-     * - Final yearly result = (semester1 + semester2) / 2
-     * - Adds grade and rank
-     * 
-     * Example:
-     * processFullYear(5) => yearly score for all students in class 5
-     */
-    private function processFullYear($class_id, $info, $allStudent, $student_female, $grade_level, $year_id, $campus_id)
+    private function processFullYear($class_id, $info, $allStudent, $student_female, $year_id, $campus_id, $grade_level,)
     {
         $semester1 = $this->getSemesterOne($class_id, $grade_level, $year_id, $campus_id);
-        $semester2 = $this->getSemester2($class_id, $year_id, $campus_id);
-
-        // return response()->json($semester2);
+        $semester2 = $this->getSemester2($class_id, $year_id, $campus_id,);
 
         if (empty($semester1) && empty($semester2)) {
             return response()->json(['status' => 1, 'message' => 'UnSuccesfully']);
         }
+
         $semester1 = is_array($semester1) ? $semester1 : (json_decode($semester1, true) ?? []);
-
-
-
         $semester2 = is_array($semester2) ? $semester2 : (json_decode($semester2, true) ?? []);
         $combined = array_merge($semester1, $semester2);
-
-        // return response()->json($combined);
 
 
         $yearly = [];
@@ -725,8 +649,6 @@ class ReportScoreUpperController extends Controller
             $yearly[$id]['average_semester2'] += $student['average_semester2'];
         }
 
-        // return response()->json($yearly);
-
         $processed = array_map(function ($student) {
             $semester1 = number_format($student['average_semester1'], 2, '.', '');
             $semester2 = number_format($student['average_semester2'], 2, '.', '');
@@ -739,15 +661,13 @@ class ReportScoreUpperController extends Controller
                 'average_semester1' => $semester1,
                 'average_semester2' => $semester2,
                 'average_year' => $total_sum,
-                'grade' => $this->getGradeUpper($total_sum),
+                // 'photo_path' => $student['photo_path'],
+                'grade' => $this->getGradeSecondary($total_sum),
                 'type' => 'All'
             ];
         }, array_values($yearly));
 
-
-
         $sorted = $this->sortAndRank($processed, 'average_year');
-        // return response()->json($sorted);
         return response()->json([
             'status' => 0,
             'data' => $sorted,

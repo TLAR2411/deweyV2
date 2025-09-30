@@ -482,6 +482,7 @@ const form = ref({
   month_id: null,
   year_id: yearId.value,
   level: null,
+  campus_id: campus_id.value,
 });
 
 const get_classroom = async () => {
@@ -500,22 +501,6 @@ const get_classroom = async () => {
     console.log(error);
   }
 };
-
-const debouncedGetClassroom = debounce(get_classroom, 300);
-watch(
-  () => settingStore.campus_id,
-  (newCampusId) => {
-    campus_id.value = newCampusId;
-    yearId.value = null;
-    form.value = {
-      type: "",
-      class_id: null,
-      month_id: null,
-    };
-    debouncedGetClassroom();
-  },
-  { immediate: true }
-);
 
 const years = ref([]);
 
@@ -548,6 +533,7 @@ watch(
   (newVal) => {
     classroomFilter.value = classrooms.value.filter((c) => c.year_id == newVal);
     checkYear.value = true;
+    form.value.year_id = newVal;
     console.log(checkYear.value);
 
     // if (newVal) {
@@ -580,6 +566,24 @@ watch(
       form.value.level = "";
     }
     console.log("level", form.value.level);
+  },
+  { immediate: true }
+);
+
+const debouncedGetClassroom = debounce(get_classroom, 300);
+watch(
+  () => settingStore.campus_id,
+  (newCampusId) => {
+    campus_id.value = newCampusId;
+    yearId.value = null;
+    form.value = {
+      type: "",
+      class_id: null,
+      month_id: null,
+      year_id: yearId.value,
+      campus_id: campus_id.value,
+    };
+    debouncedGetClassroom();
   },
   { immediate: true }
 );
@@ -734,6 +738,35 @@ const convertYear = (stringYear) => {
     9: "៩",
   };
   return str.replace(/\d/g, (d) => khmerDigits[d]);
+};
+
+const exportToExcel = async () => {
+  try {
+    const response = await api.post("viewSecondaryExportExcel", form.value, {
+      responseType: "blob",
+    });
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const fileURL = window.URL.createObjectURL(blob);
+
+    const fileLink = document.createElement("a");
+    fileLink.href = fileURL;
+
+    fileLink.setAttribute(
+      "download",
+      `${transformedClass.value}-${typeMessage.value}${
+        monthMessage.value ? `${monthMessage.value}` : ""
+      }-${yearMessage.value}.xlsx`
+    ); // ✅ fixed xlxs → xlsx
+
+    document.body.appendChild(fileLink);
+    fileLink.click();
+    document.body.removeChild(fileLink);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 onMounted(() => {
@@ -1513,7 +1546,7 @@ onMounted(() => {
                 </VWindowItem>
 
                 <VWindowItem value="studentScore" id="studentScore">
-                  <div class="d-flex justify-end">
+                  <div class="d-flex justify-end ga-2">
                     <VBtn
                       :loading="isDownload"
                       :disabled="isDownload"
@@ -1526,6 +1559,16 @@ onMounted(() => {
                       prepend-icon="mdi-printer"
                       >បោះពុម្ភតារាងពិន្ទុ</VBtn
                     >
+
+                    <VBtn
+                      variant="tonal"
+                      color="orange"
+                      :loading="isDownloadExcel"
+                      :disabled="isDownloadExcel"
+                      @click="exportToExcel"
+                    >
+                      Excel
+                    </VBtn>
                   </div>
 
                   <VCol md="12" col="12" sm="12" style="margin-top: -50px">

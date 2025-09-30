@@ -51,8 +51,12 @@ class TeacherClassController extends Controller
     {
         $campusId = $request->input('campus_id', '*');
 
+        $teacherId = $request->input('teacherId');
+
         $data = TeacherClass::query()
+
             ->from('teacher_class as tc') // Use alias directly
+            ->where('tc.teacherId', $teacherId)
             ->leftJoin('classrooms as c', 'c.id', '=', 'tc.classId')
             ->leftJoin('academicyears as y', 'c.year_id', '=', 'y.id')
             ->leftJoin('grades as g', 'g.id', '=', 'c.grade_id')
@@ -70,7 +74,7 @@ class TeacherClassController extends Controller
                 'y.id as year_id',
                 'e.id as education_id',
             ])
-            ->whereBranch($campusId)
+            // ->whereBranch($campusId)
             ->get();
 
         return response()->json($data);

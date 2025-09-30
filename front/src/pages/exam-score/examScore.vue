@@ -11,7 +11,9 @@ import PrimaryScore from "../components/primaryScore.vue";
 import Toast from "@/helper";
 
 const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
-const user_role_id = ref(user.value.role_id);
+const user_role_id = ref(parseInt(user.value.role_id));
+
+const teacherId = ref(parseInt(user.value.teacher_id));
 
 import { useSettingStore } from "@/store/setting";
 import { debounce } from "lodash";
@@ -132,6 +134,7 @@ const getClassroomHaveTeacher = async () => {
     await api
       .post("/getClassHaveTeacher", {
         campus_id: campus_id.value,
+        teacherId: teacherId.value,
       })
       .then((res) => {
         classrooms.value = res.data;
@@ -489,7 +492,7 @@ onMounted(() => {
           >
 
           <div class="mt-3" v-if="isSearch">
-            <v-col cols="6" md="3" sm="6" class="d-flex ga-2">
+            <v-col cols="" md="3" sm="6" class="d-flex ga-2">
               <VSelect
                 :items="years"
                 item-value="id"
@@ -503,7 +506,7 @@ onMounted(() => {
               />
             </v-col>
 
-            <v-col cols="6" md="6" v-if="checkYear">
+            <v-col cols="12" md="6" v-if="checkYear">
               <VRow>
                 <VCol cols="12" sm="6" md="4"
                   ><VSelect
@@ -562,9 +565,11 @@ onMounted(() => {
 
           <div style="margin-top: 10px; margin-bottom: 20px">
             <VTabs
+              grow
+              stacked
               v-if="tabSearch"
               v-model="currentTab"
-              class="bg-grey-lighten-5 border"
+              class="bg-grey-lighten-5 border v-tabs--fixed"
               color="green-darken-4"
             >
               <VTab class="customFont" :active-class="'active-tab'"
@@ -581,7 +586,11 @@ onMounted(() => {
             <div v-if="alertMessage" class="text-center text-body-2 text-red">
               <p class="customFont">{{ alertMessage }}</p>
             </div>
-            <VWindow v-model="currentTab">
+            <VWindow
+              v-model="currentTab"
+              class="disable-tab-transition"
+              :touch="false"
+            >
               <VWindowItem value="score">
                 <PrimaryScore
                   v-if="isPrimary"
@@ -811,5 +820,17 @@ table,
 td {
   border: 1px solid grey;
   border-collapse: collapse;
+}
+
+/* Ensure content area handles scrolling correctly */
+.v-window__container {
+  max-height: calc(100vh - 150px); /* Adjust based on your layout */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
+}
+
+/* Prevent VWindow from intercepting scroll events */
+.v-window {
+  overflow: hidden !important;
 }
 </style>

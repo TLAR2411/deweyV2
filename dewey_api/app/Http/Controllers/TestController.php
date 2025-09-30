@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Dflydev\DotAccessData\Data;
-use Exception;
 use Illuminate\Http\Request;
+use App\Exports\PrimaryMonthExport;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
-class ReportScoreKhmerController extends Controller
+class TestController extends Controller
 {
-    public function viewPrimary(Request $request)
+    public function exportPrimary(Request $request)
     {
         $class_id = $request->class_id;
         $type = $request->type;
@@ -57,24 +58,47 @@ class ReportScoreKhmerController extends Controller
             case 'semester1':
                 $data = $this->getSemesterOnePrimary($class_id, $avg_mutil, $class->grade_level_id ?? '', $year_id, $campus_id);
 
-                return response()->json([
-                    'type' => "ឆមាសទី១",
-                    'data' => $data,
-                    'info' => $info,
-                    'allStudent' => $allStudent,
-                    'student_female' => $student_female,
 
-                ]);
+                $filename = 'ពិន្ទុប្រចាំ'  . '.xlsx';
+                $data = Excel::download(new PrimaryMonthExport(
+                    $allStudent,
+                    $info,
+                    $data,
+                    'ឆមាសទី១',
+                    $student_female,
+                    $month_name,
+                    $type,
+                    $class->grade_level_id ?? ''
+
+                ), $filename);
+                ob_get_clean();
+                return $data;
+
+
 
             case 'semester2':
                 $data = $this->getSemesterTwoPrimary($class_id, $avg_mutil, $class->grade_level_id ?? '', $year_id, $campus_id);
-                return response()->json([
-                    'type' => "ឆមាសទី២",
-                    'data' => $data,
-                    'info' => $info,
-                    'allStudent' => $allStudent,
-                    'student_female' => $student_female
-                ]);
+
+                $filename = 'ពិន្ទុប្រចាំ'  . '.xlsx';
+                $data = Excel::download(new PrimaryMonthExport(
+                    $allStudent,
+                    $info,
+                    $data,
+                    'ឆមាសទី១',
+                    $student_female,
+                    $month_name,
+                    $type,
+                    $class->grade_level_id ?? ''
+                ), $filename);
+                ob_get_clean();
+                return $data;
+                // return response()->json([
+                //     'type' => "ឆមាសទី២",
+                //     'data' => $data,
+                //     'info' => $info,
+                //     'allStudent' => $allStudent,
+                //     'student_female' => $student_female
+                // ]);
 
             default:
                 return $this->processFullYear($class_id, $avg_mutil, $info, $allStudent, $student_female, $class->grade_level_id ?? '', $year_id, $campus_id);
@@ -165,16 +189,19 @@ class ReportScoreKhmerController extends Controller
         $processed = $this->formatData($data, $avg_mutil, $type);
         $sorted = $this->sortAndRank($processed, 'avg');
 
-        return response()->json([
-            'status' => 0,
-            'data' => $sorted,
-            'message' => $successMessage,
-            'type' => $type,
-            'info' => $info,
-            'month' => $month_name,
-            'allStudent' => $allStudent,
-            'student_female' => $student_female
-        ]);
+        $filename = 'ពិន្ទុប្រចាំ'  . '.xlsx';
+        $data = Excel::download(new PrimaryMonthExport(
+            $allStudent,
+            $info,
+            $sorted,
+            $successMessage,
+            $student_female,
+            $month_name,
+            $type,
+            ''
+        ), $filename);
+        ob_get_clean();
+        return $data;
     }
     // Helper: Format data
     private function formatData($data, $avg_mutil, $type)
@@ -350,7 +377,8 @@ class ReportScoreKhmerController extends Controller
                     ];
                 }
 
-                $semester_data_by_id[$id]['months']["month_$month"] = (float) $avg;
+                $semester_data_by_id[$id]['months']["month_$month"] = (float) $avg;       // store average
+                // $semester_data_by_id[$id]['months']["rank_month_$month"] = null;
 
                 // ✅ also keep track for ranking
                 $monthly_scores[$month][$id] = (float) $avg;
@@ -380,7 +408,7 @@ class ReportScoreKhmerController extends Controller
                     $semester_data_by_id[$id]['total_score'] = $student->total_score;
                 } else {
                     // Accumulate average for first 3 months
-                    $semester_data_by_id[$id]['total_avg_3_month'] += (float) $avg;
+                    $semester_data_by_id[$id]['total_avg_3_month'] += $avg;
                     $semester_data_by_id[$id]['month_count']++;
                 }
             }
@@ -394,8 +422,6 @@ class ReportScoreKhmerController extends Controller
             if ($student['month_count'] > 0) {
                 $student['total_avg_3_month'] = $student['total_avg_3_month'] / $student['month_count'];
             }
-
-            // print_r($student['month_count']);
         }
 
 
@@ -524,7 +550,6 @@ class ReportScoreKhmerController extends Controller
 
         $result = $this->addRank($result, 'average_3_month', 'rank_3_month');
         $result = $this->addRank($result, 'average_month_semester', 'rank_month_semester');
-        // $result = $this->sortAndRank($result, 'average_semester1');
         $result = $this->addRank($result, 'average_semester1', 'rank');
         $result = $this->addRank($result, 'listent', 'rankListent');
         $result = $this->addRank($result, 'speaking', 'rankSpeaking');
@@ -546,19 +571,6 @@ class ReportScoreKhmerController extends Controller
         $result = $this->addRank($result, 'averageKhmer', 'rankKhmer');
         $result = $this->addRank($result, 'averageSocial', 'rankSocial');
         $result = $this->addRank($result, 'average_kcms', 'rankKcms');
-
-
-        usort($result, fn($a, $b) => $b['average_semester1'] <=> $a['average_semester1']);
-        $rank = 1;
-        foreach ($result as $i => &$student) {
-            if ($i === 0) {
-                $student['rank'] = $rank;
-            } else if ($student['average_semester1'] === $result[$i - 1]['average_semester1']) {
-                $student['rank'] = $result[$i - 1]['rank'];
-            } else {
-                $student['rank'] = $i + 1;
-            }
-        }
 
         return $result;
     }
@@ -872,18 +884,6 @@ class ReportScoreKhmerController extends Controller
         $result = $this->addRank($result, 'averageSocial', 'rankSocial');
         $result = $this->addRank($result, 'average_kcms', 'rankKcms');
 
-        usort($result, fn($a, $b) => $b['average_semester2'] <=> $a['average_semester2']);
-        $rank = 1;
-        foreach ($result as $i => &$student) {
-            if ($i === 0) {
-                $student['rank'] = $rank;
-            } else if ($student['average_semester2'] === $result[$i - 1]['average_semester2']) {
-                $student['rank'] = $result[$i - 1]['rank'];
-            } else {
-                $student['rank'] = $i + 1;
-            }
-        }
-
         return $result;
     }
 
@@ -1008,7 +1008,7 @@ class ReportScoreKhmerController extends Controller
         }
 
         // Process yearly average
-        $processed = array_map(function ($student) use ($gradeLevel) {
+        $processed = array_map(function ($student) {
 
             $allMonths =  array_merge($student['months1'], $student['months2']);
 
@@ -1028,23 +1028,11 @@ class ReportScoreKhmerController extends Controller
             $semester2 = number_format($student['average_semester2'], 2, '.', '');
 
             // If one semester is missing, average only the available one
-
-            if ($gradeLevel == 6) {
-                if ($student['average_semester1'] > 0 && $student['average_semester2'] > 0) {
-                    $total_sum = number_format(($student['average_kcms1'] + $student['average_kcms2'] + $allMonthAvg) / 3, 2);
-                } else {
-                    $total_sum = number_format(max($student['average_kcms1'], $student['average_kcms2']), 2);
-                }
+            if ($student['average_semester1'] > 0 && $student['average_semester2'] > 0) {
+                $total_sum = number_format(($student['average_kcms1'] + $student['average_kcms2'] + $allMonthAvg) / 3, 2);
             } else {
-                if ($student['average_semester1'] > 0 && $student['average_semester2'] > 0) {
-                    $total_sum = number_format(($student['average_semester1'] + $student['average_semester2']) / 2, 2);
-                } else {
-                    $total_sum = number_format(max($student['average_semester1'], $student['average_semester2']), 2);
-                }
+                $total_sum = number_format(max($student['average_kcms1'], $student['average_kcms2']), 2);
             }
-
-
-
 
             return [
                 'student_id' => $student['student_id'],

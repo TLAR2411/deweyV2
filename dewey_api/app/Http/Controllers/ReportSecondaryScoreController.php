@@ -13,6 +13,8 @@ class ReportSecondaryScoreController extends Controller
         $class_id = $request->class_id;
         $type = $request->type;
         $month_id = $request->month_id;
+        $campus_id = $request->campus_id;
+        $year_id = $request->year_id;
         // $avg_mutil = $request->avg_m;
 
         $month_name = DB::table('month')
@@ -49,7 +51,7 @@ class ReportSecondaryScoreController extends Controller
                 $data = $this->fetchMonthData($class_id, $month_id);
                 return $this->processAndRespond($data, 'ខែ', 'successful month', $info, $month_name, $allStudent, $student_female);
             case 'semester1':
-                $data = $this->getSemesterOne($class_id, $class->grade_level_id ?? '');
+                $data = $this->getSemesterOne($class_id, $class->grade_level_id ?? '', $year_id, $campus_id);
                 return response()->json([
                     'type' => "ឆមាសទី១",
                     'data' => $data,
@@ -59,17 +61,18 @@ class ReportSecondaryScoreController extends Controller
                 ]);
 
             case 'semester2':
-                $data = $this->getSemester2($class_id);
+                $data = $this->getSemester2($class_id, $year_id, $campus_id);
                 return response()->json([
                     'type' => "ឆមាសទី២",
                     'data' => $data,
                     'info' => $info,
                     'allStudent' => $allStudent,
-                    'student_female' => $student_female
+                    'student_female' => $student_female,
+                    // 'yearId' => $year_id
                 ]);
 
             default:
-                return $this->processFullYear($class_id, $info, $allStudent, $student_female);
+                return $this->processFullYear($class_id, $info, $allStudent, $student_female, $year_id, $campus_id,  $class->grade_level_id ?? '');
         }
     }
 
@@ -224,7 +227,7 @@ class ReportSecondaryScoreController extends Controller
         return $grade;
     }
 
-    private function getSemesterOne($class_id, $grade_level)
+    private function getSemesterOne($class_id, $grade_level, $year_id, $campus_id)
     {
 
         // $months = [11, 12, 1, 2];
@@ -232,7 +235,8 @@ class ReportSecondaryScoreController extends Controller
 
         // Get semester months configuration from database
         $semesterConfig = DB::table('setting_semester_list')
-
+            // ->where('setting_semester_list.campus_id', $campus_id)
+            ->where('setting_semester_list.year_id', $year_id)
             ->where('setting_semester_list.grade_level_id', $grade_level)
             ->first();
 
@@ -361,6 +365,22 @@ class ReportSecondaryScoreController extends Controller
         $result = $this->addRank($result, 'english', 'rankEnglish');
         $result = $this->addRank($result, 'computer', 'rankComputer');
         $result = $this->addRank($result, 'house_education', 'rankHouseEducation');
+
+
+
+        usort($result, fn($a, $b) => $b['average_semester1'] <=> $a['average_semester1']);
+        $rank = 1;
+        foreach ($result as $i => &$student) {
+            if ($i === 0) {
+                $student['rank'] = $rank;
+            } else if ($student['average_semester1'] === $result[$i - 1]['average_semester1']) {
+                $student['rank'] = $result[$i - 1]['rank'];
+            } else {
+                $student['rank'] = $i + 1;
+            }
+        }
+
+
         return $result;
     }
 
@@ -396,13 +416,17 @@ class ReportSecondaryScoreController extends Controller
         return $data;
     }
 
-    private function getSemester2($class_id)
+    private function getSemester2($class_id, $year_id, $campus_id)
     {
         $gradeId = DB::table('classrooms')->where('id', $class_id)->first()->grade_id ?? '';
         $gradeLevel = DB::table('grades')->where('id', $gradeId)->first()->grade_level_id ?? '';
 
+
+
         // Get semester months configuration from database
         $semesterConfig = DB::table('setting_semester_list')
+            // ->where('setting_semester_list.campus_id', $campus_id)
+            ->where('setting_semester_list.year_id', $year_id)
             ->where('setting_semester_list.grade_level_id', $gradeLevel)
             ->first();
 
@@ -437,7 +461,7 @@ class ReportSecondaryScoreController extends Controller
 
         $result = $this->addRank($result, 'average_3_month', 'rank_3_month');
         $result = $this->addRank($result, 'average_month_semester', 'rank_month_semester');
-        $result = $this->addRank($result, 'average_semester1', 'rank');
+        $result = $this->addRank($result, 'average_semester2', 'rank');
         $result = $this->addRank($result, 'khmer', 'rankKhmer');
         $result = $this->addRank($result, 'writing', 'rankWriting');
         $result = $this->addRank($result, 'essay', 'rankEssay');
@@ -483,22 +507,22 @@ class ReportSecondaryScoreController extends Controller
                 }
                 if ($m == $finalMonth) {
                     $semesterData[$id]['total_semester_month'] = $avg;
-                    $semester_data[$id]['writing'] = $student->writing;
-                    $semester_data[$id]['essay'] = $student->essay;
-                    $semester_data[$id]['morality'] = $student->morality;
-                    $semester_data[$id]['khmer'] = $student->khmer;
-                    $semester_data[$id]['history'] = $student->history;
-                    $semester_data[$id]['geography'] = $student->geography;
-                    $semester_data[$id]['math'] = $student->math;
-                    $semester_data[$id]['physical'] = $student->physical;
-                    $semester_data[$id]['chemistry'] = $student->chemistry;
-                    $semester_data[$id]['biology'] = $student->biology;
-                    $semester_data[$id]['geology'] = $student->geology;
-                    $semester_data[$id]['house_education'] = $student->house_education;
-                    $semester_data[$id]['english'] = $student->english;
-                    $semester_data[$id]['pe'] = $student->pe;
-                    $semester_data[$id]['computer'] = $student->computer;
-                    $semester_data[$id]['total_score'] = $student->total_score;
+                    $semesterData[$id]['writing'] = $student->writing;
+                    $semesterData[$id]['essay'] = $student->essay;
+                    $semesterData[$id]['morality'] = $student->morality;
+                    $semesterData[$id]['khmer'] = $student->khmer;
+                    $semesterData[$id]['history'] = $student->history;
+                    $semesterData[$id]['geography'] = $student->geography;
+                    $semesterData[$id]['math'] = $student->math;
+                    $semesterData[$id]['physical'] = $student->physical;
+                    $semesterData[$id]['chemistry'] = $student->chemistry;
+                    $semesterData[$id]['biology'] = $student->biology;
+                    $semesterData[$id]['geology'] = $student->geology;
+                    $semesterData[$id]['house_education'] = $student->house_education;
+                    $semesterData[$id]['english'] = $student->english;
+                    $semesterData[$id]['pe'] = $student->pe;
+                    $semesterData[$id]['computer'] = $student->computer;
+                    $semesterData[$id]['total_score'] = $student->total_score;
                 } else {
                     $semesterData[$id]['total_avg_3_month'] += $avg / 3;
                 }
@@ -562,10 +586,10 @@ class ReportSecondaryScoreController extends Controller
         }
     }
 
-    private function processFullYear($class_id, $info, $allStudent, $student_female)
+    private function processFullYear($class_id, $info, $allStudent, $student_female, $year_id, $campus_id, $grade_level,)
     {
-        $semester1 = $this->getSemesterOne($class_id);
-        $semester2 = $this->getSemester2($class_id);
+        $semester1 = $this->getSemesterOne($class_id, $grade_level, $year_id, $campus_id);
+        $semester2 = $this->getSemester2($class_id, $year_id, $campus_id,);
 
         if (empty($semester1) && empty($semester2)) {
             return response()->json(['status' => 1, 'message' => 'UnSuccesfully']);
@@ -607,7 +631,7 @@ class ReportSecondaryScoreController extends Controller
                 'average_semester1' => $semester1,
                 'average_semester2' => $semester2,
                 'average_year' => $total_sum,
-                'photo_path' => $student['photo_path'],
+                // 'photo_path' => $student['photo_path'],
                 'grade' => $this->getGradeSecondary($total_sum),
                 'type' => 'All'
             ];

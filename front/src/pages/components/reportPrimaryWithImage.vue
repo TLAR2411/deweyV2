@@ -520,7 +520,12 @@ const rank2to5 = computed(() => data.value.filter((item) => item.rank !== 1));
 
           <!-- Original Code for Ranks 2–5 -->
           <VRow style="margin-top: -80px">
-            <template v-for="(d, index) in data" :key="'rank2-5-' + index">
+            <template
+              v-for="(d, index) in data
+                .filter((x) => x.rank !== 1)
+                .sort((a, b) => a.rank - b.rank)"
+              :key="'rank2-5-' + index"
+            >
               <template v-if="d.rank !== 1">
                 <VCol cols="6" md="6" class="pa-0">
                   <div style="margin-top: 30px">

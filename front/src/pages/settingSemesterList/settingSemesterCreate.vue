@@ -10,6 +10,8 @@ import { shallowRef } from "vue";
 import { useSettingStore } from "@/store/setting";
 import { debounce } from "lodash";
 
+
+
 const settingStore = useSettingStore();
 
 const campus_id = ref(settingStore.campus_id);
@@ -17,6 +19,7 @@ const route = useRoute();
 
 const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
 const user_id = ref(user.value.id);
+const user_role_id = ref(user.value.role_id);
 
 const router = useRouter();
 
@@ -168,9 +171,7 @@ const updateSemester = async () => {
           icon: "success",
         });
       });
-    router.push({
-      name: "SettingSemesterList",
-    });
+    router.go(-1);
   } catch (error) {
     console.log(error);
   } finally {

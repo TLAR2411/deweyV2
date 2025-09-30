@@ -6,6 +6,8 @@ import { ref, onMounted, computed } from "vue";
 const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
 const campus = ref(JSON.parse(localStorage.getItem("campus") || "[]"));
 
+console.log("user", user.value);
+
 const settingStore = useSettingStore();
 
 const filter = ref({

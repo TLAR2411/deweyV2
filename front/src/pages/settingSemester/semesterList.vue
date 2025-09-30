@@ -6,6 +6,9 @@ import { useSettingStore } from "@/store/setting";
 import { debounce } from "lodash";
 import { useRouter } from "vue-router";
 
+const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
+const user_role_id = ref(parseInt(user.value.role_id));
+
 const router = useRouter();
 
 const settingStore = useSettingStore();
@@ -77,22 +80,22 @@ const headers = ref([
     key: "edu_name",
     title: "កម្មវិធីសិក្សា",
   },
-  {
-    key: "semester_month1",
-    title: "ឆមាសទី១",
-  },
-  {
-    key: "three_months_semester1",
-    title: "ខែឆមាសទី១",
-  },
-  {
-    key: "semester_month2",
-    title: "ឆមាសទី២",
-  },
-  {
-    key: "three_months_semester2",
-    title: "ខែឆមាសទី២",
-  },
+  // {
+  //   key: "semester_month1",
+  //   title: "ឆមាសទី១",
+  // },
+  // {
+  //   key: "three_months_semester1",
+  //   title: "ខែឆមាសទី១",
+  // },
+  // {
+  //   key: "semester_month2",
+  //   title: "ឆមាសទី២",
+  // },
+  // {
+  //   key: "three_months_semester2",
+  //   title: "ខែឆមាសទី២",
+  // },
   {
     key: "action",
     title: "សកម្មភាព",
@@ -131,7 +134,7 @@ onMounted(async () => {
 <template>
   <div>
     <v-row>
-      <v-col cols="12" md="10" class="mt-4">
+      <v-col cols="12" md="6" class="mt-4">
         <v-card elevation="0" class="pa-4 border">
           <v-row class="align-center">
             <v-col cols="12" md="6">
@@ -187,7 +190,9 @@ onMounted(async () => {
                 flat
                 @click="detail(row.item.id)"
               ></v-btn>
+
               <v-btn
+                v-if="user_role_id == 1"
                 class="text-warning mr-4"
                 icon="mdi-pen"
                 size="sm"
@@ -195,6 +200,7 @@ onMounted(async () => {
                 @click="getId(row.item.id)"
               ></v-btn>
               <v-btn
+                v-if="user_role_id == 1"
                 class="text-error"
                 icon="mdi-delete"
                 size="sm"

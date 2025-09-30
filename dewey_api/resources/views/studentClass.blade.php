@@ -15,7 +15,8 @@
         <td colspan="2" style="text-align: left;"></td>
     </tr>
     <tr>
-        <td colspan="6" style="text-align: center;font-family: Khmer OS MOul;">បញ្ជីរាយនាមសិស្សានុសិស្ស ថ្នាក់ទី <span>{{ $classroom->first()->grade_name ?? '' }}</span></td>
+        <td colspan="6" style="text-align: center;font-family: Khmer OS MOul;">បញ្ជីរាយនាមសិស្សានុសិស្ស ថ្នាក់ទី
+            <span>{{ $classroom->first()->grade_name ?? '' }}</span></td>
     </tr>
     <thead>
         <tr style="border: 1px solid black;">
@@ -30,21 +31,22 @@
     </thead>
     <tbody>
         @foreach ($students as $index => $student)
-        <tr>
-            <td style="text-align: center;">{{ $index + 1 }}</td>
-            <!-- <td style="text-align: left;">{{ $student->student_card_id }}</td> -->
-            <td style="font-family: Khmer OS Battambang;font-size: 11px;">{{ $student->kh_name }}</td>
-            <td>{{ $student->en_name }}</td>
-            <td style="font-family: Khmer OS Battambang;">{{ $student->gender == 'M' ? 'ប្រុស' : 'ស្រី' }}</td>
-            <td>{{ $student->dob }}</td>
-        </tr>
+            <tr>
+                <td style="text-align: center;">{{ $index + 1 }}</td>
+                <!-- <td style="text-align: left;">{{ $student->student_card_id }}</td> -->
+                <td style="font-family: Khmer OS Battambang;font-size: 11px;">{{ $student->kh_name }}</td>
+                <td>{{ $student->en_name }}</td>
+                <td style="font-family: Khmer OS Battambang;">{{ $student->gender == 'M' ? 'ប្រុស' : 'ស្រី' }}</td>
+                <td>{{ $student->dob }}</td>
+            </tr>
         @endforeach
         <tr>
             <td colspan="3" style="font-family: Khmer OS Battambang;">
-                <p>ចំនួនសិស្សទាំងអស់&emsp; <span> {{ $total_student }}នាក់</span>&emsp;&emsp;&emsp;&emsp;សិស្សស្រី <span>{{$female_student}}</span></p>
+                <p>ចំនួនសិស្សទាំងអស់&emsp; <span> {{ $total_student }}នាក់</span>&emsp;&emsp;&emsp;&emsp;សិស្សស្រី
+                    <span>{{ $female_student }}</span></p>
             </td>
             <td colspan="3" style="text-align: center;">ថ្ងៃ ខែ ឆ្នាំ ឆស័ក ព.ស. </td>
         </tr>
-        ​
+
     </tbody>
 </table>

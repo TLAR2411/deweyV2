@@ -131,7 +131,7 @@ class AuthController extends Controller
         // $accessToken->expires_at = Carbon::now()->addDays(30);
         // $accessToken->save();
         // $dayExpire = Carbon::now()->addDays(30)->format('Y-m-d H:i:s');
-        $expiresAt = Carbon::now()->addDays(30);
+        $expiresAt = Carbon::now()->addDays(366);
         $tokenResult = $user->createToken("myToken", ['*'], $expiresAt);
         $token = $tokenResult->plainTextToken;
         return response()->json([

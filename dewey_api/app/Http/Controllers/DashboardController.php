@@ -19,7 +19,7 @@ class DashboardController extends Controller
 
         $classroom = Classroom::whereBranch($campusId)->where('deleted', '!=', '1')->count();
 
-        $teacher = Teacher::count();
+        $teacher = Teacher::whereBranch($campusId)->count();
 
         return response()->json([
             "allStudent" => $student,

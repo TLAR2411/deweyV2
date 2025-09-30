@@ -14,7 +14,7 @@ const student = ref({});
 const studentHistory = ref({});
 
 const images = (img) => {
-  return "http://127.0.0.1:8000/storage/" + img;
+  return "https://iconic.disreportcard.com/storage/" + img;
 };
 
 const getOneStudent = async () => {

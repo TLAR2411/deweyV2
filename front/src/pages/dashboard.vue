@@ -12,6 +12,10 @@ import Toast from "@/helper";
 import { useSettingStore } from "@/store/setting";
 import { debounce } from "lodash";
 
+const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
+const user_role_id = ref(parseInt(user.value.role_id));
+const teacherId = ref(parseInt(user.value.teacher_id));
+
 const settingStore = useSettingStore();
 
 const campus_id = ref(settingStore.campus_id);
@@ -102,7 +106,9 @@ const routeClick = (route) => {
 };
 
 onMounted(() => {
-  // getData();
+  if (teacherId.value) {
+    router.push("score");
+  }
 });
 </script>
 <template>

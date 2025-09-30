@@ -544,7 +544,7 @@ onMounted(() => {
           បញ្ចូលសិស្ស
         </v-btn>
 
-        <!-- <v-btn @click="exportExcel"> excel </v-btn> -->
+        <v-btn @click="exportExcel"> excel </v-btn>
       </v-col>
     </v-row>
 

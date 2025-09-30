@@ -12,7 +12,7 @@ import { useSettingStore } from "@/store/setting";
 import { debounce } from "lodash";
 
 const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
-const user_login_role_id = ref(user.value.role_id);
+const user_login_role_id = ref(parseInt(user.value.role_id));
 
 const settingStore = useSettingStore();
 
@@ -187,7 +187,7 @@ onMounted(async () => {
   await getRole();
   if (roles.value) {
     const computeRole = computed(() => {
-      if (user_login_role_id.value === 1) {
+      if (user_login_role_id.value === 1 || user_login_role_id.value === "1") {
         return roles.value;
       } else if (user_login_role_id.value === 2) {
         console.log("hello world");
@@ -288,7 +288,7 @@ onMounted(async () => {
                   </v-col>
 
                   <VCol cols="12" md="6">
-                    <VSelect
+                    <VAutocomplete
                       class="customFont"
                       density="compact"
                       label="ជ្រើសរើសបុគ្គលិក"

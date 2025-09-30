@@ -28,7 +28,7 @@ const headers = ref([
 const handleAddSubject = async (subjectData) => {
   try {
     await api
-      .post("http://dewey_api.test/api/addSubject", subjectData, {
+      .post("/addSubject", subjectData, {
         headers: { "Content-Type": "application/json" },
       })
       .then((res) => {

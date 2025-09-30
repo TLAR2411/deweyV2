@@ -351,6 +351,144 @@ const printSemesterDetail = () => {
   printd.print(element, styles);
 };
 
+const printYearDetail = () => {
+  const printd = new Printd();
+  const element = document.getElementById("yearDetail");
+
+  const styles = [
+    // External stylesheets
+    "https://cdn.jsdelivr.net/npm/vuetify@3.x/dist/vuetify.min.css",
+    "https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Moul&family=Siemreap&display=swap",
+
+    // Custom styles
+    `
+    /* Fonts */
+    .header {
+      font-family: "Battambang", system-ui;
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    .battambang-thin {
+      font-family: "Battambang", system-ui;
+      font-weight: 300;
+      font-style: normal;
+      font-size: 15px;
+    }
+
+    .moul {
+      font-family: "Moul", serif;
+      font-style: normal;
+    }
+
+    /* Layout helpers */
+    .teacher {
+      margin-left: 20px;
+    }
+
+    .primary {
+      display: none;
+    }
+
+    /* Table styles */
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .vertical-header {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      white-space: nowrap;
+      padding: 3px 0;
+    }
+
+    th, td {
+      border-top: 1px solid black;
+      border-left: 1px solid black;
+      border-bottom: 1px solid black;
+      border-right: none;
+    }
+
+    /* Right border for last cell in each row */
+    tr td:last-child,
+    tr th:last-child {
+      border-right: 1px solid black;
+    }
+
+    /* Bottom border for last row */
+    table tr:last-child td {
+      border-bottom: 1px solid black;
+    }
+
+    /* Print styles */
+    @media print {
+      .subjectRank {
+        background-color: #ffccbc !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background-clip: padding-box;
+        border-collapse: collapse;
+        padding: 0;
+      }
+
+      .semesterField {
+        background-color: #c8e6c9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background-clip: padding-box;
+        border-collapse: collapse;
+        padding: 0;
+      }
+
+      .semesterFieldHeader {
+        background-color: #81c784 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background-clip: padding-box;
+        border-collapse: collapse;
+        padding: 0;
+      }
+
+      .subjectRankHeader {
+        background-color: #ffab91 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background-clip: padding-box;
+        border-collapse: collapse;
+        padding: 0;
+      }
+
+      .field {
+        background-color:  #ffffb1 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background-clip: padding-box;
+        border-collapse: collapse;
+        padding: 0;
+      }
+
+      
+
+      table, th, td {
+        border-collapse: collapse;
+      }
+
+      @page {
+        margin: 0;
+        size: landscape;
+      }
+
+      body {
+        margin: 0;
+      }
+    }
+    `,
+  ];
+
+  printd.print(element, styles);
+};
+
 const printTopFive = () => {
   const printd = new Printd();
   const element = document.getElementById("printSection");
@@ -639,6 +777,7 @@ const form = ref({
   month_id: null,
   year_id: yearId.value,
   level: null,
+  campus_id: campus_id.value,
 });
 
 const get_classroom = async () => {
@@ -657,22 +796,6 @@ const get_classroom = async () => {
     console.log(error);
   }
 };
-
-const debouncedGetClassroom = debounce(get_classroom, 300);
-watch(
-  () => settingStore.campus_id,
-  (newCampusId) => {
-    campus_id.value = newCampusId;
-    yearId.value = null;
-    form.value = {
-      type: "",
-      class_id: null,
-      month_id: null,
-    };
-    debouncedGetClassroom();
-  },
-  { immediate: true }
-);
 
 const years = ref([]);
 
@@ -705,6 +828,7 @@ watch(
   (newVal) => {
     classroomFilter.value = classrooms.value.filter((c) => c.year_id == newVal);
     checkYear.value = true;
+    form.value.year_id = newVal;
     console.log(checkYear.value);
   }
 );
@@ -732,6 +856,25 @@ watch(
       form.value.level = "";
     }
     console.log("level", form.value.level);
+  },
+  { immediate: true }
+);
+
+const debouncedGetClassroom = debounce(get_classroom, 300);
+watch(
+  () => settingStore.campus_id,
+  (newCampusId) => {
+    campus_id.value = newCampusId;
+    // form.value.campus_id = campus_id.value;
+    yearId.value = null;
+    form.value = {
+      type: "",
+      class_id: null,
+      month_id: null,
+      year_id: yearId.value,
+      campus_id: campus_id.value,
+    };
+    debouncedGetClassroom();
   },
   { immediate: true }
 );
@@ -768,6 +911,8 @@ const findInfo = async () => {
     openDailog.value = false;
     monthMessage.value = "";
     typeMessage.value = "";
+
+    console.log("form", form.value);
     await api
       .post("/viewPrimary", form.value, {
         headers: {
@@ -884,6 +1029,39 @@ const convertYear = (stringYear) => {
     9: "៩",
   };
   return str.replace(/\d/g, (d) => khmerDigits[d]);
+};
+
+// {
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//       }
+
+const exportToExcel = async () => {
+  try {
+    const response = await api.post("/viewPrimaryExportExcel", form.value, {
+      responseType: "blob", // ✅ must go here
+    });
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const fileURL = window.URL.createObjectURL(blob);
+
+    const fileLink = document.createElement("a");
+    fileLink.href = fileURL;
+    fileLink.setAttribute(
+      "download",
+      `${transformedClass.value}-${typeMessage.value}${
+        monthMessage.value ? `${monthMessage.value}` : ""
+      }-${yearMessage.value}.xlsx`
+    ); // ✅ fixed xlxs → xlsx
+    document.body.appendChild(fileLink);
+    fileLink.click();
+    document.body.removeChild(fileLink);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 onMounted(async () => {
@@ -1025,14 +1203,25 @@ onMounted(async () => {
                 >តារាងកិត្តិយស</VTab
               >
 
-              <VTab class="customFont" :active-class="'active-tab'"
+              <VTab
+                v-if="form.type != 'year'"
+                class="customFont"
+                :active-class="'active-tab'"
                 >តារាងពិន្ទុ</VTab
               >
               <VTab
-                v-if="form.type != 'month' && form.level == 6"
+                v-if="
+                  form.type != 'month' && form.type != 'year' && form.level == 6
+                "
                 class="customFont"
                 :active-class="'active-tab'"
                 >តារាងពិន្ទុឆមាស</VTab
+              >
+              <VTab
+                v-if="form.type == 'year'"
+                class="customFont"
+                :active-class="'active-tab'"
+                >តារាងពិន្ទុប្រចាំឆ្នាំ</VTab
               >
             </VTabs>
           </div>
@@ -1370,7 +1559,16 @@ onMounted(async () => {
                               ស្រី
                             </p>
                           </td>
-                          <td style="height: 0; text-align: center; width: 12%">
+                          <td
+                            style="height: 0; text-align: center; width: 12%"
+                            v-if="form.level == 6"
+                          >
+                            {{ item.average_kcms }}
+                          </td>
+                          <td
+                            style="height: 0; text-align: center; width: 12%"
+                            v-if="form.level != 6"
+                          >
                             {{ item.average_month_semester }}
                           </td>
                           <td style="height: 0; text-align: center; width: 9%">
@@ -1450,6 +1648,16 @@ onMounted(async () => {
                           >
                             មធ្យមភាគ
                           </th>
+
+                          <th
+                            v-if="form.level == 6"
+                            rowspan="2"
+                            style="height: 0px; width: 7%"
+                            class="text-center"
+                          >
+                            ប្រចាំឆ្នាំ
+                          </th>
+
                           <th
                             rowspan="2"
                             style="height: 0px; width: 7%"
@@ -1486,6 +1694,14 @@ onMounted(async () => {
                             ឆមាសទី២
                           </th>
                           <th
+                            v-if="form.level == 6"
+                            style="height: 0px; width: 7%"
+                            class="text-center"
+                          >
+                            មធ្យមខែក្នុង១ឆ្នាំ
+                          </th>
+                          <th
+                            v-else
                             style="height: 0px; width: 7%"
                             class="text-center"
                           >
@@ -1521,6 +1737,12 @@ onMounted(async () => {
                           </td>
                           <td style="height: 0; text-align: center">
                             {{ item.average_semester2 }}
+                          </td>
+                          <td
+                            v-if="form.level == 6"
+                            style="height: 0; text-align: center"
+                          >
+                            {{ item.allMonthAvg }}
                           </td>
                           <td style="height: 0; text-align: center">
                             {{ item.average_year }}
@@ -1674,8 +1896,12 @@ onMounted(async () => {
                   </VCol>
                 </VWindowItem>
 
-                <VWindowItem value="studentScore" id="studentScore">
-                  <div class="d-flex justify-end">
+                <VWindowItem
+                  value="studentScore"
+                  id="studentScore"
+                  v-if="form.type != 'year'"
+                >
+                  <div class="d-flex justify-end ga-2">
                     <VBtn
                       :loading="isDownload"
                       :disabled="isDownload"
@@ -1688,6 +1914,15 @@ onMounted(async () => {
                       prepend-icon="mdi-printer"
                       >បោះពុម្ភតារាងពិន្ទុ</VBtn
                     >
+                    <VBtn
+                      variant="tonal"
+                      color="orange"
+                      :loading="isDownloadExcel"
+                      :disabled="isDownloadExcel"
+                      @click="exportToExcel"
+                    >
+                      excel
+                    </VBtn>
                   </div>
 
                   <VCol md="12" col="12" sm="12" style="margin-top: -50px">
@@ -2470,7 +2705,6 @@ onMounted(async () => {
 
                             <!-- writing -->
                             <th
-                              v-if="form.level != 1 && form.level != 2"
                               style="height: 0%; width: 2%"
                               class="text-center pa-0 font-weight-bold vertical-header"
                             >
@@ -2510,6 +2744,7 @@ onMounted(async () => {
 
                             <!-- grammar -->
                             <th
+                              v-if="form.level != 1 && form.level != 2"
                               style="height: 0%; width: 2%"
                               class="text-center pa-0 font-weight-bold vertical-header"
                             >
@@ -2976,7 +3211,6 @@ onMounted(async () => {
 
                             <!-- writing -->
                             <td
-                              v-if="form.level != 1 && form.level != 2"
                               style="height: 0; padding: 0"
                               class="text-center"
                             >
@@ -2985,11 +3219,7 @@ onMounted(async () => {
                             <td
                               style="height: 0; padding: 0"
                               class="text-center subjectRank bg-deep-orange-lighten-4"
-                              v-if="
-                                form.type != 'month' &&
-                                form.level != 1 &&
-                                form.level != 2
-                              "
+                              v-if="form.type != 'month'"
                               :class="
                                 item.rankWriting == 1 ||
                                 item.rankWriting == 2 ||
@@ -3030,6 +3260,7 @@ onMounted(async () => {
 
                             <!-- grammar -->
                             <td
+                              v-if="form.level != 1 && form.level != 2"
                               style="height: 0; padding: 0"
                               class="text-center"
                             >
@@ -3038,7 +3269,11 @@ onMounted(async () => {
                             <td
                               style="height: 0; padding: 0"
                               class="text-center subjectRank bg-deep-orange-lighten-4"
-                              v-if="form.type != 'month'"
+                              v-if="
+                                form.type != 'month' &&
+                                form.level != 1 &&
+                                form.level != 2
+                              "
                               :class="
                                 item.rankGrammar == 1 ||
                                 item.rankGrammar == 2 ||
@@ -3689,7 +3924,15 @@ onMounted(async () => {
                   </VCol>
                 </VWindowItem>
 
-                <VWindowItem value="semesterDetail" id="semesterDetail">
+                <VWindowItem
+                  v-if="
+                    form.level == '6' &&
+                    form.type != 'month' &&
+                    form.type != 'year'
+                  "
+                  value="semesterDetail"
+                  id="semesterDetail"
+                >
                   <div class="d-flex justify-end">
                     <VBtn
                       :loading="isDownload"
@@ -3708,23 +3951,24 @@ onMounted(async () => {
                   <VCol md="12" col="12" sm="12" style="margin-top: -50px">
                     <div
                       class="text-center moul headerFont customKhmerMoul text-green-darken-4"
-                      style="font-size: 17px"
+                      style="font-size: 15px"
                     >
                       <p class="mb-2">ព្រះរាជាណាចក្រកម្ពុជា</p>
                       <p>ជាតិ សាសនា ព្រះមហាក្សត្រ</p>
                     </div>
                   </VCol>
 
-                  <VCol cols="12" md="12" sm="12" style="margin-top: -73px">
+                  <VCol cols="12" md="12" sm="12" style="margin-top: -70px">
                     <div
                       class="d-flex flex-column text-center pic"
                       style="width: 30%"
                     >
-                      <div class="img mx-auto" style="width: 50px">
+                      <div class="img mx-auto" style="width: 40px">
                         <v-img class="logo" :src="dis"></v-img>
                       </div>
                       <div>
                         <p
+                          style="font-size: 12px"
                           class="customKhmerMoul moul text-green-darken-4 mt-2"
                         >
                           សាលាចំណេះទូទៅអន្តរជាតិ ឌូវី
@@ -3733,9 +3977,9 @@ onMounted(async () => {
                     </div>
                     <div
                       class="moul text-end customKhmerMoul text-green-darken-4 grade"
-                      style="margin-top: -25px"
+                      style="margin-top: -30px"
                     >
-                      <p>
+                      <p style="font-size: 12px">
                         ថ្នាក់ទី៖
                         <span
                           class="text-orange-darken-3 font-weight-bold"
@@ -3746,8 +3990,9 @@ onMounted(async () => {
                     </div>
                   </VCol>
 
-                  <VCol md="12" col="12" sm="12" style="margin-top: -40px">
+                  <VCol md="12" col="12" sm="12" style="margin-top: -20px">
                     <div
+                      style="font-size: 12px"
                       class="text-center report_score customKhmerMoul moul text-green-darken-4"
                     >
                       <p>
@@ -3810,10 +4055,10 @@ onMounted(async () => {
                       </p>
                     </div>
 
-                    <div>
+                    <div style="margin-top: 2px">
                       <v-table
                         class="customFont battambang-thin table"
-                        style="font-size: 12px; color: black; width: 100%"
+                        style="font-size: 11px; color: black; width: 100%"
                       >
                         <tr>
                           <th
@@ -3891,9 +4136,24 @@ onMounted(async () => {
                             ចំណាត់ថ្នាក់
                           </th>
                         </tr>
-                        <tr>
+                        <tr v-if="form.type == 'semester1'">
                           <template
-                            v-for="m in reportData[0].months_config.monthName"
+                            v-for="m in reportData[0].months_config1.monthName"
+                            :key="m"
+                          >
+                            <th
+                              class="font-weight-bold pt-1 semesterFieldHeader"
+                            >
+                              {{ m }}
+                            </th>
+                            <th class="font-weight-bold subjectRankHeader">
+                              ចំ
+                            </th>
+                          </template>
+                        </tr>
+                        <tr v-if="form.type == 'semester2'">
+                          <template
+                            v-for="m in reportData[0].months_config2.monthName"
                             :key="m"
                           >
                             <th
@@ -3927,44 +4187,75 @@ onMounted(async () => {
                               </p>
                             </td>
                             <template
-                              v-for="m in item.months_config.monthName"
+                              v-if="form.type == 'semester1'"
+                              v-for="m in item.months_config1.monthName"
                               :key="m"
                             >
                               <td
                                 style="height: 0; padding: 1px"
                                 class="semesterField"
                               >
-                                {{ item.months[m].average }}
+                                {{ item.months1[m].average }}
                               </td>
                               <td
                                 class="subjectRank"
                                 style="height: 0; padding: 1px"
                                 :class="
-                                  item.months[m].rank == 1 ||
-                                  item.months[m].rank == 2 ||
-                                  item.months[m].rank == 3
+                                  item.months1[m].rank == 1 ||
+                                  item.months1[m].rank == 2 ||
+                                  item.months1[m].rank == 3
                                     ? 'text-red font-weight-bold'
                                     : 'text-black'
                                 "
                               >
-                                {{ item.months[m].rank }}
+                                {{ item.months1[m].rank }}
                               </td>
                             </template>
-                            <td style="height: 0; padding: 0">
-                              {{ item.average_month_semester }}
+
+                            <template
+                              v-if="form.type == 'semester2'"
+                              v-for="m in item.months_config2.monthName"
+                              :key="m"
+                            >
+                              <td
+                                style="height: 0; padding: 1px"
+                                class="semesterField"
+                              >
+                                {{ item.months2[m].average }}
+                              </td>
+                              <td
+                                class="subjectRank"
+                                style="height: 0; padding: 1px"
+                                :class="
+                                  item.months2[m].rank == 1 ||
+                                  item.months2[m].rank == 2 ||
+                                  item.months2[m].rank == 3
+                                    ? 'text-red font-weight-bold'
+                                    : 'text-black'
+                                "
+                              >
+                                {{ item.months2[m].rank }}
+                              </td>
+                            </template>
+                            <td
+                              style="height: 0; text-align: center; padding: 0"
+                              v-if="form.type != 'month' && form.level == 6"
+                            >
+                              {{ item.average_kcms }}
                             </td>
                             <td
-                              class="subjectRank"
-                              style="height: 0; text-align: center; padding: 0"
                               :class="
-                                item.rank_month_semester == 1 ||
-                                item.rank_month_semester == 2 ||
-                                item.rank_month_semester == 3
+                                item.rankKcms == 1 ||
+                                item.rankKcms == 2 ||
+                                item.rankKcms == 3
                                   ? 'text-red font-weight-bold'
                                   : 'text-black'
                               "
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              v-if="form.type != 'month' && form.level == 6"
                             >
-                              {{ item.rank_month_semester }}
+                              {{ item.rankKcms }}
                             </td>
                             <td style="height: 0; padding: 0">
                               {{ item.average_3_month }}
@@ -4011,6 +4302,627 @@ onMounted(async () => {
                           </tr>
                         </tbody>
                       </v-table>
+                    </div>
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="12"
+                    sm="12"
+                    class="customFont battambang-thin pl-16"
+                    style="margin-top: -20px; font-size: 12px"
+                  >
+                    <div class="d-flex">
+                      <p>
+                        សិស្សសរុបមាន ៖&ensp;<span class="font-weight-bold">{{
+                          allStudents
+                        }}</span
+                        >&ensp;នាក់
+                      </p>
+                      <p>
+                        សិស្សស្រីមាន&ensp;&ensp;៖&ensp;<span
+                          class="font-weight-bold"
+                          >{{ student_female }}</span
+                        >&ensp;នាក់
+                      </p>
+                    </div>
+                    <p class="mr-6 text-end" style="margin-top: -20px">
+                      បាត់ដំបង, ថ្ងៃទី.......ខែ.............ឆ្នាំ<span>{{
+                        toKhmerYear(currentYear)
+                      }}</span>
+                    </p>
+                    <div class="d-flex justify-end mt-2">
+                      <p
+                        style="margin-left: 60px"
+                        class="w-25 text-center teacher moul customKhmerMoul text-black font-weight-bold"
+                      >
+                        គ្រូបន្ទុកថ្នាក់
+                      </p>
+                    </div>
+                  </VCol>
+
+                  <VCol
+                    style="margin-top: -50px; font-size: 12px"
+                    cols="12"
+                    md="12"
+                    sm="12"
+                    class="customFont battambang-thin pl-10 text-start"
+                  >
+                    <p class="w-100 pl-6 mt-2">បានឃើញ និងឯកភាព</p>
+                    <p
+                      class="w-100 pl-10 font-weight-bold text-black moul customKhmerMoul"
+                    >
+                      នាយកសាលា
+                    </p>
+                    <!-- </div> -->
+                  </VCol>
+                </VWindowItem>
+
+                <VWindowItem
+                  v-if="form.type == 'year'"
+                  value="yearDetail"
+                  id="yearDetail"
+                >
+                  <div class="d-flex justify-end">
+                    <VBtn
+                      :loading="isDownload"
+                      :disabled="isDownload"
+                      id="about"
+                      v-if="openDailog"
+                      variant="tonal"
+                      color="green"
+                      class="customFont"
+                      @click="printYearDetail"
+                      prepend-icon="mdi-printer"
+                      >បោះពុម្ភតារាងពិន្ទុ</VBtn
+                    >
+                  </div>
+
+                  <VCol md="12" col="12" sm="12" style="margin-top: -50px">
+                    <div
+                      class="text-center moul headerFont customKhmerMoul text-green-darken-4"
+                      style="font-size: 15px"
+                    >
+                      <p class="mb-2">ព្រះរាជាណាចក្រកម្ពុជា</p>
+                      <p>ជាតិ សាសនា ព្រះមហាក្សត្រ</p>
+                    </div>
+                  </VCol>
+
+                  <VCol cols="12" md="12" sm="12" style="margin-top: -70px">
+                    <div
+                      class="d-flex flex-column text-center pic"
+                      style="width: 30%"
+                    >
+                      <div class="img mx-auto" style="width: 40px">
+                        <v-img class="logo" :src="dis"></v-img>
+                      </div>
+                      <div>
+                        <p
+                          style="font-size: 12px"
+                          class="customKhmerMoul moul text-green-darken-4 mt-2"
+                        >
+                          សាលាចំណេះទូទៅអន្តរជាតិ ឌូវី
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      class="moul text-end customKhmerMoul text-green-darken-4 grade"
+                      style="margin-top: -30px"
+                    >
+                      <p style="font-size: 12px">
+                        ថ្នាក់ទី៖
+                        <span
+                          class="text-orange-darken-3 font-weight-bold"
+                          v-if="classMessage"
+                          >{{ transformedClass }}</span
+                        >
+                      </p>
+                    </div>
+                  </VCol>
+
+                  <VCol md="12" col="12" sm="12" style="margin-top: -20px">
+                    <div
+                      style="font-size: 12px"
+                      class="text-center report_score customKhmerMoul moul text-green-darken-4"
+                    >
+                      <p>
+                        តារាងពិន្ទុប្រចាំ
+                        <span
+                          class="text-orange-darken-3"
+                          v-if="typeMessage != 'ឆ្នាំ'"
+                          >{{ typeMessage }}</span
+                        >
+                        <span
+                          class="text-orange-darken-3"
+                          v-if="monthMessage"
+                          >{{ monthMessage }}</span
+                        >
+                        <span>
+                          ឆ្នាំសិក្សា
+                          <span class="text-orange-darken-3 font-weight-bold">{{
+                            convertYear(yearMessage)
+                          }}</span></span
+                        >
+                      </p>
+                    </div>
+
+                    <!-- តារាងកិត្តិយស -->
+
+                    <div
+                      class="text-center mt-0 customKhmerMoul moul text-green-darken-4 primary d-none"
+                      style="font-size: 17px"
+                    >
+                      <p>
+                        តារាងកិត្តិយសប្រចាំ
+                        <span
+                          class="text-orange-darken-3"
+                          v-if="typeMessage != 'ឆ្នាំ'"
+                          >{{ typeMessage }}</span
+                        >
+                        <span
+                          class="text-orange-darken-3"
+                          v-if="monthMessage"
+                          >{{ monthMessage }}</span
+                        >
+                      </p>
+                    </div>
+                    <div
+                      class="text-center mt-2 customKhmerMoul moul text-green-darken-4 primary d-none"
+                      style="font-size: 17px"
+                    >
+                      <p>
+                        ថ្នាក់ទី៖
+                        <span
+                          class="text-orange-darken-3"
+                          v-if="classMessage"
+                          >{{ transformedClass }}</span
+                        >
+                        ឆ្នាំសិក្សា
+                        <span class="text-orange-darken-3">{{
+                          convertYear(yearMessage)
+                        }}</span>
+                      </p>
+                    </div>
+
+                    <div style="margin-top: 2px">
+                      <Vtable
+                        class="customFont battambang-thin table"
+                        style="font-size: 12px; color: black; width: 100%"
+                      >
+                        <tr>
+                          <th
+                            rowspan="2"
+                            style="
+                              height: 0px;
+                              width: 2%;
+                              vertical-align: middle;
+                            "
+                            class="text-center pa-0 font-weight-bold"
+                          >
+                            ល.រ
+                          </th>
+                          <th
+                            rowspan="2"
+                            style="
+                              height: 0px;
+                              width: 15%;
+                              vertical-align: middle;
+                            "
+                            class="text-center text-align-center pa-0 font-weight-bold"
+                          >
+                            គោត្តនាម និងនាម
+                          </th>
+                          <th
+                            rowspan="2"
+                            style="
+                              height: 0px;
+                              width: 2%;
+                              vertical-align: middle;
+                            "
+                            class="text-center pa-0 font-weight-bold"
+                          >
+                            ភេទ
+                          </th>
+                          <th
+                            style="height: 0px; width: 24%"
+                            class="text-center subjectRankHeader pa-0 font-weight-bold"
+                            colspan="10"
+                          >
+                            ឆមាសទី១
+                          </th>
+                          <th
+                            style="height: 0px; width: 24%"
+                            class="text-center subjectRankHeader pa-0 font-weight-bold"
+                            colspan="10"
+                          >
+                            ឆមាសទី២
+                          </th>
+                          <th
+                            style="height: 0px; width: 40%"
+                            class="text-center subjectRankHeader pa-0 font-weight-bold"
+                            colspan="8"
+                          >
+                            ប្រចាំឆ្នាំ
+                          </th>
+                        </tr>
+                        <tr>
+                          <th class="font-weight-bold py-1 semesterFieldHeader">
+                            គណិត
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+                          <th class="font-weight-bold semesterFieldHeader">
+                            វិទ្យាសាស្រ្ត
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+                          <th class="font-weight-bold semesterFieldHeader">
+                            សង្គម
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+                          <th class="font-weight-bold semesterFieldHeader">
+                            ខ្មែរ
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+
+                          <th class="font-weight-bold semesterFieldHeader">
+                            ពិន្ទុសរុប
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+
+                          <th class="font-weight-bold semesterFieldHeader">
+                            គណិត
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+                          <th class="font-weight-bold semesterFieldHeader">
+                            វិទ្យាសាស្រ្ត
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+                          <th class="font-weight-bold semesterFieldHeader">
+                            សង្គម
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+                          <th class="font-weight-bold semesterFieldHeader">
+                            ខ្មែរ
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+
+                          <th class="font-weight-bold semesterFieldHeader">
+                            ពិន្ទុសរុប
+                          </th>
+                          <th class="font-weight-bold subjectRankHeader px-1">
+                            ចំ
+                          </th>
+
+                          <th class="font-weight-bold" style="width: 7%">
+                            មធ្យមឆមាស១
+                          </th>
+                          <th
+                            style="width: 2%"
+                            class="font-weight-bold subjectRankHeader"
+                          >
+                            ចំ
+                          </th>
+                          <th class="font-weight-bold" style="width: 7%">
+                            មធ្យមឆមាស២
+                          </th>
+                          <th
+                            style="width: 2%"
+                            class="font-weight-bold subjectRankHeader"
+                          >
+                            ចំ
+                          </th>
+                          <th class="font-weight-bold" style="width: 7%">
+                            មធ្យមខែក្នុង១ឆ្នាំ
+                          </th>
+                          <th
+                            style="width: 2%"
+                            class="font-weight-bold subjectRankHeader"
+                          >
+                            ចំ
+                          </th>
+                          <th class="font-weight-bold" style="width: 9%">
+                            មធ្យមប្រចាំឆ្នាំ
+                          </th>
+                          <th
+                            style="width: 4%"
+                            class="subjectRankHeader font-weight-bold px-2"
+                          >
+                            ចំ
+                          </th>
+                        </tr>
+                        <tbody class="customFont text-center">
+                          <tr v-for="(item, idx) in reportData" :key="idx">
+                            <td style="height: 0; padding: 1px">
+                              {{ idx + 1 }}
+                            </td>
+                            <td
+                              style="
+                                height: 0;
+                                text-align: left;
+                                padding-left: 6px;
+                              "
+                            >
+                              {{ item.kh_name }}
+                            </td>
+                            <td class="customFont pa-0" style="height: 0">
+                              <p v-if="item.gender == 1 || item.gender == 'M'">
+                                ប
+                              </p>
+                              <p
+                                v-else-if="
+                                  item.gender == 2 || item.gender == 'F'
+                                "
+                              >
+                                ស
+                              </p>
+                            </td>
+                            <td class="semesterField">
+                              {{ item.math1 }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankMath1 == 1 ||
+                                item.rankMath1 == 2 ||
+                                item.rankMath1 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankMath1 }}
+                            </td>
+
+                            <td class="semesterField">
+                              {{ item.chemistry1 }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankChemistry1 == 1 ||
+                                item.rankChemistry1 == 2 ||
+                                item.rankChemistry1 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankChemistry1 }}
+                            </td>
+
+                            <td class="semesterField">
+                              {{ item.social1 }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankSocial1 == 1 ||
+                                item.rankSocial1 == 2 ||
+                                item.rankSocial1 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankSocial1 }}
+                            </td>
+
+                            <td class="semesterField">
+                              {{ item.khmer1 }}
+                            </td>
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankKhmer1 == 1 ||
+                                item.rankKhmer1 == 2 ||
+                                item.rankKhmer1 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankKhmer1 }}
+                            </td>
+
+                            <td class="semesterField">
+                              {{ item.total_score_kcms1 }}
+                            </td>
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankKcms1 == 1 ||
+                                item.rankKcms1 == 2 ||
+                                item.rankKcms1 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankKcms1 }}
+                            </td>
+
+                            <td class="semesterField">
+                              {{ item.math2 }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankMath2 == 1 ||
+                                item.rankMath2 == 2 ||
+                                item.rankMath2 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankMath2 }}
+                            </td>
+
+                            <td class="semesterField">
+                              {{ item.chemistry2 }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankChemistry2 == 1 ||
+                                item.rankChemistry2 == 2 ||
+                                item.rankChemistry2 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankChemistry2 }}
+                            </td>
+
+                            <td class="semesterField">
+                              {{ item.social2 }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankSocial2 == 1 ||
+                                item.rankSocial2 == 2 ||
+                                item.rankSocial2 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankSocial2 }}
+                            </td>
+
+                            <td class="semesterField">
+                              {{ item.khmer2 }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankKhmer2 == 1 ||
+                                item.rankKhmer2 == 2 ||
+                                item.rankKhmer2 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankKhmer2 }}
+                            </td>
+
+                            <td class="semesterField">
+                              {{ item.total_score_kcms2 }}
+                            </td>
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankKcms2 == 1 ||
+                                item.rankKcms2 == 2 ||
+                                item.rankKcms2 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankKcms2 }}
+                            </td>
+
+                            <td>
+                              {{ item.average_kcms1 }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankKcms1 == 1 ||
+                                item.rankKcms1 == 2 ||
+                                item.rankKcms1 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankKcms1 }}
+                            </td>
+
+                            <td>
+                              {{ item.average_kcms2 }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankKcms2 == 1 ||
+                                item.rankKcms2 == 2 ||
+                                item.rankKcms2 == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankKcms2 }}
+                            </td>
+
+                            <td>
+                              {{ item.allMonthAvg }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rankAllMonth == 1 ||
+                                item.rankAllMonth == 2 ||
+                                item.rankAllMonth == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rankAllMonth }}
+                            </td>
+
+                            <td>
+                              {{ item.average_year }}
+                            </td>
+
+                            <td
+                              class="subjectRank"
+                              style="height: 0; text-align: center; padding: 0"
+                              :class="
+                                item.rank == 1 ||
+                                item.rank == 2 ||
+                                item.rank == 3
+                                  ? 'text-red font-weight-bold'
+                                  : 'text-black'
+                              "
+                            >
+                              {{ item.rank }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </Vtable>
                     </div>
                   </VCol>
                   <VCol

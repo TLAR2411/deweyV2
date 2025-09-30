@@ -6,6 +6,10 @@ import { useSettingStore } from "@/store/setting";
 import { debounce } from "lodash";
 import { useRoute, useRouter } from "vue-router";
 
+const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
+
+const user_role_id = ref(parseInt(user.value.role_id));
+
 const router = useRouter();
 
 const route = useRoute();
@@ -175,7 +179,7 @@ onMounted(async () => {
             :loading="isloading"
             :loading-text="isloading ? 'Loading...' : ''"
             :no-data-text="isloading ? '' : 'មិនមានទិន្នន័យទេ'"
-            :items-per-page="5"
+            :items-per-page="8"
             class="customFont mt-5"
           >
             <template v-slot:item.action="row">
@@ -187,6 +191,7 @@ onMounted(async () => {
                 @click="getId(row.item.id_setting_list)"
               ></v-btn>
               <v-btn
+                v-if="user_role_id == 1 || user_role_id == 2"
                 class="text-error"
                 icon="mdi-delete"
                 size="sm"

@@ -296,6 +296,7 @@ class ScoreKhmerController extends Controller
                         'homework' => $student['homework'] ?? null,
                         'healthy' => $student['healthy'] ?? null,
                         'steam' => $student['steam'] ?? null,
+                        // 'approved'=>$student['approved']??0
                     ];
                     // 
                 }

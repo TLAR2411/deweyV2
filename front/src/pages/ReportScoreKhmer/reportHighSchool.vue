@@ -435,6 +435,7 @@ const form = ref({
   edu_id: 3,
   year_id: yearId.value,
   level: null,
+  campus_id: campus_id.value,
 });
 
 const downloadAsImage = async () => {
@@ -495,23 +496,6 @@ const get_classroom = async () => {
     console.log(error);
   }
 };
-
-const debouncedGetClassroom = debounce(get_classroom, 300);
-watch(
-  () => settingStore.campus_id,
-  (newCampusId) => {
-    campus_id.value = newCampusId;
-    yearId.value = null;
-    form.value = {
-      type: "",
-      class_id: null,
-      month_id: null,
-      edu_id: 3,
-    };
-    debouncedGetClassroom();
-  },
-  { immediate: true }
-);
 
 const years = ref([]);
 
@@ -577,6 +561,26 @@ watch(
       form.value.level = "";
     }
     console.log("level", form.value.level);
+  },
+  { immediate: true }
+);
+
+const debouncedGetClassroom = debounce(get_classroom, 300);
+watch(
+  () => settingStore.campus_id,
+  (newCampusId) => {
+    campus_id.value = newCampusId;
+    yearId.value = null;
+    form.value = {
+      type: "",
+      class_id: null,
+      month_id: null,
+      edu_id: 3,
+      type: "",
+      year_id: yearId.value,
+      campus_id: campus_id.value,
+    };
+    debouncedGetClassroom();
   },
   { immediate: true }
 );
@@ -874,7 +878,7 @@ onMounted(() => {
                     :disabled="isloading"
                     >ស្វែងរក</v-btn
                   >
-                  <VBtn
+                  <!-- <VBtn
                     v-if="openDailog"
                     variant="tonal"
                     color="green"
@@ -882,7 +886,7 @@ onMounted(() => {
                     class="customFont"
                     prepend-icon="mdi-printer"
                     >បោះពុម្ភ</VBtn
-                  >
+                  > -->
 
                   <!-- <VBtn
                     v-if="openDailog"
@@ -911,7 +915,10 @@ onMounted(() => {
               <VTab class="customFont" :active-class="'active-tab'"
                 >តារាងកិត្តិយស</VTab
               >
-              <VTab class="customFont" :active-class="'active-tab'"
+              <VTab
+                class="customFont"
+                :active-class="'active-tab'"
+                v-if="form.type != 'year'"
                 >តារាងពិន្ទុ</VTab
               >
               <!-- <VTab class="customFont" :active-class="'active-tab'"
@@ -1489,7 +1496,7 @@ onMounted(() => {
                     cols="12"
                     md="12"
                     sm="12"
-                    class="primary d-flex ga-3 align-center text-end"
+                    class="primary customFont d-flex ga-3 align-center text-end"
                   >
                     <VTextField
                       class="primary"
