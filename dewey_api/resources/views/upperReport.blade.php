@@ -19,20 +19,20 @@
     }
 @endphp
 
-<table width="2480px">
+<table width="2480">
     <tr>
-        <td colspan="{{ $type != 'ខែ' ? 40 : 24 }}" style="text-align: center; font-family: Khmer OS MOul;">
+        <td colspan="{{ $type != 'ខែ' ? 40 : 20 }}" style="text-align: center; font-family: Khmer OS MOul;">
             ព្រះរាជាណាចក្រកម្ពុជា</td>
     </tr>
     <tr>
-        <td colspan="{{ $type != 'ខែ' ? 40 : 24 }}" style="text-align: center; font-family: Khmer OS MOul;">ជាតិ សាសនា
+        <td colspan="{{ $type != 'ខែ' ? 40 : 20 }}" style="text-align: center; font-family: Khmer OS MOul;">ជាតិ សាសនា
             ព្រះមហាក្សត្រ</td>
     </tr>
 
     <tr>
         <td colspan="{{ $type != 'ខែ' ? 5 : 1 }} "></td>
 
-        <td colspan="{{ $type != 'ខែ' ? 35 : 24 }}"
+        <td colspan="{{ $type != 'ខែ' ? 35 : 20 }}"
             style="text-align: left; font-family: Khmer OS MouL; font-size: 10px;">
             <div style="display: flex; align-items: center; gap: 5px">
 
@@ -45,15 +45,17 @@
     </tr>
 
     <tr>
-        <td colspan="{{ $type != 'ខែ' ? 40 : 24 }}" style="text-align: center; font-family: Khmer OS MOul; ">
+        <td colspan="{{ $type != 'ខែ' ? 40 : 20 }}" style="text-align: center; font-family: Khmer OS MOul; ">
             តារាងស្រង់ពិន្ទុ​
             ថ្នាក់ទី<span style="color: #FFA500">
                 {{ toKhmerNumber($info->first()->grade_name ?? '') }}
             </span></td>
     </tr>
-
     <tr>
-        <td colspan="{{ $type != 'ខែ' ? 40 : 24 }}" style="text-align: center; font-family: Khmer OS MOul;">ប្រចាំ​
+        <td colspan="{{ $type != 'ខែ' ? 40 : 20 }}" style="text-align: center; font-family: Khmer OS MOul;">ប្រចាំ​
+
+
+
             <span>
                 @if ($type != 'ឆ្នាំ' && $type == 'semester1')
                     ឆមាសទី១
@@ -85,26 +87,6 @@
         <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 30px;">
             ភេទ
         </th>
-        <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
-            តែងសេចក្ដី
-        </th>
-
-        @if ($type != 'ខែ')
-            <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
-                ចំ.ថ្នាក់
-            </th>
-        @endif
-
-        <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
-            ស.ស.អាន
-        </th>
-
-        @if ($type != 'ខែ')
-            <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
-                ចំ.ថ្នាក់
-            </th>
-        @endif
-
         <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
             ភាសារខ្មែរ
         </th>
@@ -196,16 +178,6 @@
         @endif
 
         <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
-            គេហវិទ្យា
-        </th>
-
-        @if ($type != 'ខែ')
-            <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
-                ចំ.ថ្នាក់
-            </th>
-        @endif
-
-        <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
             កីឡា
         </th>
 
@@ -235,7 +207,7 @@
             </th>
         @endif
 
-        @if ($type == 'ខែ')
+        @if ($type == 'ខែ' || $type == 'month')
             <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
                 ពិន្ទុសរុប
             </th>
@@ -251,19 +223,19 @@
             <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
                 ពិន្ទុឆមាស
             </th>
-            <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 45px;">
+            <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
                 ម.ឆមាស
             </th>
             <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
                 ចំ.ឆមាស
             </th>
-            <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 45px;">
+            <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
                 ម.ខែឆមាស
             </th>
             <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
                 ចំ.ខែឆមាស
             </th>
-            <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 45px;">
+            <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
                 ម.ពិន្ទុឆមាស
             </th>
             <th style="text-align: center; font-family: Khmer OS MOul;font-size: 9px;width: 35px;">
@@ -274,6 +246,7 @@
             និទ្ទេសន៍
         </th>
     </tr>
+
     <tbody style="text-align: center; border: 1px;">
         @foreach ($data as $idx => $item)
             <tr>
@@ -286,169 +259,133 @@
                         <p>ស</p>
                     @endif
                 </td>
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['writing'] }}
-                </td>
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['khmer'] }}</td>
 
-                @if ($type != 'ខែ')
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['rankWriting'] }}
-                    </td>
-                @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['essay'] }}
-                </td>
-                @if ($type != 'ខែ')
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['rankEssay'] }}
-                    </td>
-                @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['khmer'] }}
-                </td>
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankKhmer'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['morality'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['morality'] }}</td>
 
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankMorality'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['history'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['history'] }}</td>
+
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankHistory'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['geography'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['geography'] }}</td>
+
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankGeography'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['math'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['math'] }}</td>
+
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankMath'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['physical'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['physical'] }}</td>
+
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankPhysic'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['chemistry'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['chemistry'] }}</td>
+
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankChemistry'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['biology'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['biology'] }}</td>
+
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankBiology'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['geology'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['earth_science'] }}</td>
+
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['rankGeology'] }}
+                        {{ $item['rankEarth'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['house_education'] }}
-                </td>
-                @if ($type != 'ខែ')
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['rankHouseEducation'] }}
-                    </td>
-                @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['english'] }}
-                </td>
-                @if ($type != 'ខែ')
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['rankEnglish'] }}
-                    </td>
-                @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['pe'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['pe'] }}</td>
+
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankPe'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['computer'] }}
-                </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['english'] }}</td>
+
+                @if ($type != 'ខែ')
+                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
+                        {{ $item['rankEnglish'] }}
+                    </td>
+                @endif
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['computer'] }}</td>
+
                 @if ($type != 'ខែ')
                     <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
                         {{ $item['rankComputer'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['total_score'] }}
-                </td>
-                @if ($type == 'ខែ')
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['avg'] }}
-                    </td>
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['rank'] }}
-                    </td>
+
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['total_score'] }}</td>
+
+                @if ($type == 'ខែ' || $type == 'month')
+                    <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['avg'] }}</td>
+
+                    <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['rank'] }}</td>
                 @endif
 
                 @if ($type != 'ខែ')
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['average_month_semester'] }}
+                    <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['average_month_semester'] }}
                     </td>
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['rank_month_semester'] }}
+                    <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['rank_month_semester'] }}
                     </td>
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['average_3_month'] }}
+                    <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['average_3_month'] }}
                     </td>
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['rank_3_month'] }}
+                    <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['rank_3_month'] }}
                     </td>
-                    @if ($type == 'ឆមាសទី១' || $type == 'semester1')
-                        <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                            {{ $item['average_semester1'] }}
+
+                    @if ($type == 'semester1' || $type == 'ឆមាសទី១')
+                        <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['average_semester1'] }}
                         </td>
                     @endif
-                    @if ($type == 'ឆមាសទី២' || $type == 'semester2')
-                        <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                            {{ $item['average_semester2'] }}
+                    @if ($type == 'semester2' || $type == 'ឆមាសទី២')
+                        <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['average_semester1'] }}
                         </td>
                     @endif
-                    <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                        {{ $item['rank'] }}
+
+                    <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['rank'] }}
                     </td>
                 @endif
-                <td style="font-family: Khmer OS Siemreap;font-size: 10px ">
-                    {{ $item['grade'] }}
+                <td style="font-family: Khmer OS Siemreap;font-size: 10px">{{ $item['grade'] }}
                 </td>
             </tr>
         @endforeach
@@ -465,7 +402,7 @@
         <td colspan="3" style="font-family: Khmer OS Siemreap;font-size: 10px ">
             សិស្សស្រីមាន ៖ {{ $student_female }}នាក់
         </td>
-        <td colspan="{{ $type != 'ខែ' ? 25 : 12 }} ">
+        <td colspan="{{ $type != 'ខែ' ? 25 : 9 }} ">
         </td>
         <td colspan="6" style="font-family: Khmer OS Siemreap;font-size: 10px;text-align: center">
             បាត់ដំបង, ថ្ងៃ.......... ទី...... ខែ..........ឆ្នាំ {{ toKhmerNumber(date('Y')) }}
@@ -476,7 +413,7 @@
         <td colspan="3" style="font-family: Khmer OS Siemreap;font-size: 10px;text-align: center">
             បាត់ដំបង, ថ្ងៃ.......... ទី...... ខែ..........ឆ្នាំ {{ toKhmerNumber(date('Y')) }}
         </td>
-        <td colspan="{{ $type != 'ខែ' ? 25 : 12 }} ">
+        <td colspan="{{ $type != 'ខែ' ? 25 : 9 }} ">
         </td>
         <td colspan="6" style="font-family: Khmer OS Siemreap;font-size: 10px;text-align: center">
             គ្រូបន្ទុកថ្នាក់

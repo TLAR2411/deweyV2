@@ -782,6 +782,35 @@ const subject = ref([
   { name: "សកម្មភាព" },
 ]);
 
+const exportToExcel = async () => {
+  try {
+    const response = await api.post("viewUpperExportExcel", form.value, {
+      responseType: "blob",
+    });
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const fileURL = window.URL.createObjectURL(blob);
+
+    const fileLink = document.createElement("a");
+    fileLink.href = fileURL;
+
+    fileLink.setAttribute(
+      "download",
+      `${transformedClass.value}-${typeMessage.value}${
+        monthMessage.value ? `${monthMessage.value}` : ""
+      }-${yearMessage.value}.xlsx`
+    ); // ✅ fixed xlxs → xlsx
+
+    document.body.appendChild(fileLink);
+    fileLink.click();
+    document.body.removeChild(fileLink);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 onMounted(() => {
   get_month();
   get_year();
@@ -1561,7 +1590,7 @@ onMounted(() => {
                 </VWindowItem>
 
                 <VWindowItem value="studentScore" id="studentScore">
-                  <div class="d-flex justify-end">
+                  <div class="d-flex justify-end ga-2">
                     <VBtn
                       :loading="isDownload"
                       :disabled="isDownload"
@@ -1574,6 +1603,16 @@ onMounted(() => {
                       prepend-icon="mdi-printer"
                       >បោះពុម្ភតារាងពិន្ទុ</VBtn
                     >
+
+                    <VBtn
+                      variant="tonal"
+                      color="orange"
+                      :loading="isDownloadExcel"
+                      :disabled="isDownloadExcel"
+                      @click="exportToExcel"
+                    >
+                      Excel
+                    </VBtn>
                   </div>
                   <VCol md="12" col="12" sm="12" style="margin-top: -50px">
                     <div

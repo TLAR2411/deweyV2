@@ -23,9 +23,6 @@ use App\Http\Controllers\StudentClassExportController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\AttendanceKhmerController;
 use App\Http\Controllers\CampusController;
-use App\Http\Controllers\ExportReport\HighSchoolExportController;
-use App\Http\Controllers\ExportReport\PrimaryMonthExportController;
-use App\Http\Controllers\ExportReport\SecondaryExportController;
 use App\Http\Controllers\ReportScoreKhmerController;
 use App\Http\Controllers\ReportScoreUpperController;
 use App\Http\Controllers\ReportSecondaryScoreController;
@@ -175,11 +172,8 @@ Route::group([
     //report
     Route::post('/getSemesterOnePrimary', [ReportScoreKhmerController::class, 'getSemesterOnePrimary']);
     Route::post('/viewPrimary', [ReportScoreKhmerController::class, 'viewPrimary']);
-    Route::post('/viewPrimaryExportExcel', [PrimaryMonthExportController::class, 'exportPrimary']);
     Route::post('/viewSecondary', [ReportSecondaryScoreController::class, 'viewSecondary']);
-    Route::post('/viewSecondaryExportExcel', [SecondaryExportController::class, 'viewSecondary']);
     Route::post('/viewUpper', [ReportScoreUpperController::class, 'viewUpper']);
-    Route::post('/viewUpperExportExcel', [HighSchoolExportController::class, 'viewUpper']);
 
 
     Route::post('/dashboard', [DashboardController::class, 'dashboard']);

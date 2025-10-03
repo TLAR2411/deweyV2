@@ -164,7 +164,7 @@ watch(
     students_scores.value = null;
     isBtnSearch.value = false;
     checkAdd.value = false;
-    if (user_role_id.value == 5) {
+    if (user_role_id.value == 4) {
       debouncedGetClassroomHaveTeacher();
       console.log("hello getClass teacher");
     } else {
