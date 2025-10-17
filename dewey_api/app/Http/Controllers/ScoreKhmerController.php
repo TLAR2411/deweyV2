@@ -44,6 +44,7 @@ class ScoreKhmerController extends Controller
                 $student_class = DB::table('view_studentscore')
                     ->where('class_id', $request->class_id)
                     ->where('deleted', 0)
+                    ->where('is_transfer', 0)
                     ->orderby('kh_name')
                     ->get();
                 return response()->json(

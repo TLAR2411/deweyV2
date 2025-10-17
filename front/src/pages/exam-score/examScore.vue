@@ -238,55 +238,6 @@ const findStudentHabit = async () => {
   }
 };
 
-const findInfo = async () => {
-  isloading.value = true;
-  isHighschool.value = false;
-  isPrimary.value = false;
-  isSecondary.value = false;
-  alertMessage.value = null;
-
-  try {
-    await api
-      .post("/showstudent", formSearch.value, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-      .then((res) => {
-        students_scores.value = res.data.student_class;
-        status.value = res.data.status;
-        avg_m.value = res.data.avg_m;
-        level.value = res.data.level;
-        findStudentHabit();
-      });
-  } catch (error) {
-    console.log(error);
-  } finally {
-    isloading.value = false;
-    if (students_scores.value.length > 0) {
-      if (formSearch.value.edu_id === 1) {
-        isPrimary.value = true;
-      } else if (formSearch.value.edu_id === 2) {
-        isSecondary.value = true;
-        isPrimary.value = false;
-        isHighschool.value = false;
-      } else if (formSearch.value.edu_id === 3) {
-        isHighschool.value = true;
-        isSecondary.value = false;
-      }
-      checkAdd.value = true;
-      isSearch.value = false;
-      isBtnSearch.value = true;
-      tabSearch.value = true;
-    } else {
-      alertMessage.value = "មិនមានសិស្សសម្រាប់ធ្វើការបញ្ចូលពិន្ទុទេ";
-      checkAdd.value = false;
-      isSearch.value = true;
-      isBtnSearch.value = false;
-    }
-  }
-};
-
 const alertMessage = ref();
 
 const addScore = async () => {
@@ -451,6 +402,84 @@ const addStudentHabit = async () => {
 
 const currentTab = ref("score");
 
+const filterSubject = ref({
+  teacherId: teacherId.value,
+  classId: "",
+});
+
+watch(
+  () => formSearch.value.class_id,
+  (n) => {
+    filterSubject.value.classId = n;
+  }
+);
+
+const subject = ref([]);
+
+const getSubject = async () => {
+  console.log("filter", filterSubject.value);
+  try {
+    await api.post("/getSubjectFilter", filterSubject.value).then((res) => {
+      subject.value = res.data;
+    });
+  } catch (error) {
+    Toast.fire({
+      title: error.response.data.message,
+      icon: "error",
+    });
+  }
+};
+
+const findInfo = async () => {
+  isloading.value = true;
+  isHighschool.value = false;
+  isPrimary.value = false;
+  isSecondary.value = false;
+  alertMessage.value = null;
+
+  try {
+    await api
+      .post("/showstudent", formSearch.value, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then((res) => {
+        students_scores.value = res.data.student_class;
+        status.value = res.data.status;
+        avg_m.value = res.data.avg_m;
+        level.value = res.data.level;
+        findStudentHabit();
+        getSubject();
+      });
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isloading.value = false;
+    if (students_scores.value.length > 0) {
+      if (formSearch.value.edu_id === 1) {
+        isPrimary.value = true;
+      } else if (formSearch.value.edu_id === 2) {
+        isSecondary.value = true;
+        isPrimary.value = false;
+        isHighschool.value = false;
+      } else if (formSearch.value.edu_id === 3) {
+        isHighschool.value = true;
+        isSecondary.value = false;
+      }
+      checkAdd.value = true;
+      isSearch.value = false;
+      isBtnSearch.value = true;
+      tabSearch.value = true;
+    } else {
+      alertMessage.value = "មិនមានសិស្សសម្រាប់ធ្វើការបញ្ចូលពិន្ទុទេ";
+      checkAdd.value = false;
+      isSearch.value = true;
+      isBtnSearch.value = false;
+    }
+  }
+};
+
 onMounted(() => {
   get_year();
   getEdu();
@@ -596,18 +625,21 @@ onMounted(() => {
                   v-if="isPrimary"
                   :students_scores="students_scores"
                   :level="level"
+                  :subject="subject"
                   @deleteRecord="deleteRecordScore"
                 />
                 <Secondary
                   v-if="isSecondary"
                   :students_scores="students_scores"
                   :level="level"
+                  :subject="subject"
                   @deleteRecord="deleteRecordScore"
                 />
                 <HighSchoolScore
                   v-if="isHighschool"
                   :students_scores="students_scores"
                   :level="level"
+                  :subject="subject"
                   @deleteRecord="deleteRecordScore"
                 />
 

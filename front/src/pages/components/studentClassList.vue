@@ -11,6 +11,9 @@ import { watch } from "vue";
 import { useRouter } from "vue-router";
 import { useSettingStore } from "@/store/setting";
 import { debounce } from "lodash";
+import primary from "./tranfer/primary.vue";
+import secondary from "./tranfer/secondary.vue";
+import upper from "./tranfer/upper.vue";
 
 const settingStore = useSettingStore();
 
@@ -45,6 +48,16 @@ const searchSelect = ref("");
 const selectedStudent = ref([]);
 
 const selectedStudentToRemove = ref([]);
+
+const oldClassId = ref(route.params.id);
+
+const eduId = ref(null);
+
+const dialogPrimary = ref(false);
+
+const dialogSecondary = ref(false);
+
+const dialogHigh = ref(false);
 
 const formUpgrade = ref({
   yearId: "",
@@ -134,6 +147,31 @@ const upgradeClass = async () => {
   console.log(transformedData);
 };
 
+const classrooms = ref({});
+const filterClass = ref({});
+
+const get_classroom = async () => {
+  loading.value = true;
+  try {
+    await api
+      .post("/get_all_classroom", {
+        campus_id: campus_id.value, // Pass campus_id
+      })
+      .then((res) => {
+        classrooms.value = res.data;
+        eduId.value = classrooms.value.find(
+          (c) => c.id == route.params.id
+        ).education_id;
+
+        console.log("edu", eduId.value);
+
+        filterClass.value = classrooms.value.filter((c) => c.deleted != 1);
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const newClassId = ref();
 
 const studentChangeClass = async () => {
@@ -148,6 +186,8 @@ const studentChangeClass = async () => {
         {
           data: transformedData,
           new_class_id: newClassId.value,
+          old_class_id: route.params.id,
+          edu_id: eduId.value,
         },
         {
           headers: {
@@ -385,25 +425,6 @@ watch(
   { immediate: true }
 );
 
-const classrooms = ref({});
-const filterClass = ref({});
-
-const get_classroom = async () => {
-  loading.value = true;
-  try {
-    await api
-      .post("/get_all_classroom", {
-        campus_id: campus_id.value, // Pass campus_id
-      })
-      .then((res) => {
-        classrooms.value = res.data;
-        filterClass.value = classrooms.value.filter((c) => c.deleted != 1);
-      });
-  } catch (error) {
-    console.log(error);
-  }
-};
-
 const years = ref([]);
 
 const get_year = async () => {
@@ -449,6 +470,25 @@ const getNotInClass = async () => {
     });
   } finally {
     loading.value = false;
+  }
+};
+
+const newStudentId = ref(null);
+const newStudentName = ref(null);
+
+const addScoreToNewStudent = (item) => {
+  console.log("item", item);
+
+  newStudentId.value = item.id;
+  newStudentName.value = item.kh_name;
+
+  console.log(newStudentName.value);
+  if (eduId.value == 3 || eduId.value == "3") {
+    dialogHigh.value = true;
+  } else if (eduId.value == 2 || eduId.value == "2") {
+    dialogSecondary.value = true;
+  } else {
+    dialogPrimary.value = true;
   }
 };
 
@@ -585,6 +625,17 @@ onMounted(() => {
             លុបចេញពីថ្នាក់
           </v-tooltip>
         </v-btn>
+        <VBtn
+          flat
+          size="30"
+          class="text-green-darken-2 my-1"
+          @click="addScoreToNewStudent(row.item)"
+        >
+          <v-icon>mdi-table-plus</v-icon>
+          <v-tooltip activator="parent" class="customFont" location="end">
+            បញ្ចូលពិន្ទុសិស្សចូលថ្មី
+          </v-tooltip>
+        </VBtn>
       </template>
     </v-data-table>
 
@@ -781,6 +832,36 @@ onMounted(() => {
           </VRow>
         </VCardText>
       </VCard>
+    </VDialog>
+
+    <!-- primary -->
+    <VDialog
+      max-width="900"
+      v-model="dialogPrimary"
+      scrollable
+      transition="dialog-transition"
+    >
+      <primary
+        :classId="oldClassId"
+        :newStudentId="newStudentId"
+        :newStudentName="newStudentName"
+      />
+    </VDialog>
+    <!-- secondary -->
+    <VDialog
+      max-width="900"
+      v-model="dialogSecondary"
+      scrollable
+      transition="dialog-transition"
+    >
+    </VDialog>
+    <!-- upper -->
+    <VDialog
+      max-width="900"
+      v-model="dialogHigh"
+      scrollable
+      transition="dialog-transition"
+    >
     </VDialog>
   </div>
 </template>

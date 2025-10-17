@@ -8,7 +8,12 @@ const props = defineProps({
   level: {
     type: String,
   },
+  subject: {
+    type: Object,
+  },
 });
+
+console.log("subjjjjjjj", props.subject);
 
 console.log("prop", props.level);
 
@@ -88,26 +93,26 @@ const handlePaste = (event, rowIndex, startField) => {
   }
 };
 
-const subject = ref([
-  { name: "ឈ្មោះសិស្ស" },
-  { name: "ស្ដាប់" },
-  { name: "និយាយ" },
-  { name: "អំណាន" },
-  { name: "សរសេរ" },
-  { name: "តែងសេចក្ដី" },
-  { name: "វេយ្យាករណ៍" },
-  { name: "គណិតវិទ្យា" },
-  { name: "វិទ្យាសាស្រ្ត" },
-  { name: "ភូមិវិទ្យា" },
-  { name: "ប្រវិត្តិវិទ្យា" },
-  { name: "សីលធម៍" },
-  { name: "គំនូរ" },
-  { name: "អក្សរផ្ចង់" },
-  { name: "អប់រំកាយ" },
-  { name: "កិច្ចការផ្ទះ" },
-  { name: "អនាម័យ" },
-  { name: "STEAM" },
-]);
+// const subject = ref([
+//   { name: "ឈ្មោះសិស្ស" },
+//   { name: "ស្ដាប់" },
+//   { name: "និយាយ" },
+//   { name: "អំណាន" },
+//   { name: "សរសេរ" },
+//   { name: "តែងសេចក្ដី" },
+//   { name: "វេយ្យាករណ៍" },
+//   { name: "គណិតវិទ្យា" },
+//   { name: "វិទ្យាសាស្រ្ត" },
+//   { name: "ភូមិវិទ្យា" },
+//   { name: "ប្រវិត្តិវិទ្យា" },
+//   { name: "សីលធម៍" },
+//   { name: "គំនូរ" },
+//   { name: "អក្សរផ្ចង់" },
+//   { name: "អប់រំកាយ" },
+//   { name: "កិច្ចការផ្ទះ" },
+//   { name: "អនាម័យ" },
+//   { name: "STEAM" },
+// ]);
 </script>
 
 <template>
@@ -117,7 +122,13 @@ const subject = ref([
         <th style="height: 0px" class="text-left py-2 px-8 border">
           ឈ្មោះសិស្ស
         </th>
-        <th style="height: 0px" class="text-left py-2 px-8 border">ស្ដាប់</th>
+        <th
+          v-if="subject.values"
+          style="height: 0px"
+          class="text-left py-2 px-8 border"
+        >
+          ស្ដាប់
+        </th>
         <th style="height: 0px" class="text-left py-2 px-8 border">និយាយ</th>
         <th style="height: 0px" class="text-left py-2 px-8 border">អំណាន</th>
         <th style="height: 0px" class="text-left py-2 px-8 border">សរសេរ</th>

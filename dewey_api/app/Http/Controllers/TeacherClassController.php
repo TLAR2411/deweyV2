@@ -8,6 +8,7 @@ use App\Models\Teacher;
 use App\Models\TeacherClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class TeacherClassController extends Controller
 {
@@ -74,6 +75,14 @@ class TeacherClassController extends Controller
                 'y.id as year_id',
                 'e.id as education_id',
             ])
+            ->groupBy([
+                'c.id',
+                'g.name',
+                'gl.level',
+                'e.id',
+                'y.name',
+                'y.id'
+            ])
             // ->whereBranch($campusId)
             ->get();
 
@@ -106,5 +115,17 @@ class TeacherClassController extends Controller
             "messsage" => "គ្រូត្រូវបានលុបដោយជោគជ័យ",
             "status" => 200
         ]);
+    }
+
+    public function getSubject(Request $request)
+    {
+        $data = TeacherClass::query()
+            ->from('teacher_class as tc')
+            ->where('teacherId', $request->teacherId)
+            ->where('classId', $request->classId)
+            ->leftJoin('subjects as sub', 'sub.id', '=', 'tc.subjectId')
+            ->select('sub.subject_name', 'sub.id')
+            ->get();
+        return response()->json($data);
     }
 }

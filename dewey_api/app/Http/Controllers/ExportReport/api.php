@@ -237,6 +237,8 @@ Route::post("/getSocial/{id}", [SocialController::class, "getSocial"]);
 Route::post("/deleteSocial/{id}", [SocialController::class, "deleteSocial"]);
 Route::post("/getOneSocial/{id}", [SocialController::class, "getOneSocial"]);
 
+Route::post("/getSubjectFilter", [TeacherClassController::class, 'getSubject']);
+
 
 Route::post("/showStudentHabbit", [StudentHabbitController::class, "showStudentHabbit"]);
 Route::post("/saveStudentHabit", [StudentHabbitController::class, "saveStudentHabit"]);

@@ -12,16 +12,16 @@ class ClassroomController extends Controller
     public function add_classroom(ClassroomRequest $request)
     {
 
-        $existingClass = DB::table('classrooms')
-            // ->where('grade_id', $request->grade_id)
-            ->where('year_id', $request->year_id)
-            ->where('campus_id', $request->campus_id)
-            ->exists();
-        if ($existingClass) {
-            return response()->json([
-                'message' => "ថ្នាក់នេះបានបង្កើតម្ដងរួចហើយ"
-            ], 400);
-        }
+        // $existingClass = DB::table('classrooms')
+        //     // ->where('grade_id', $request->grade_id)
+        //     ->where('year_id', $request->year_id)
+        //     ->where('campus_id', $request->campus_id)
+        //     ->exists();
+        // if ($existingClass) {
+        //     return response()->json([
+        //         'message' => "ថ្នាក់នេះបានបង្កើតម្ដងរួចហើយ"
+        //     ], 400);
+        // }
 
         $data = Classroom::create($request->validated() + [
             "description" => $request->description,

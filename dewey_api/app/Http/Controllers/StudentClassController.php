@@ -37,6 +37,7 @@ class StudentClassController extends Controller
             ->leftJoin('classtypes as ct', 'c.classtype_id', '=', 'ct.id')
             ->leftJoin('campus as cam', 'c.campus_id', '=', 'cam.id')
             ->where('s.deleted', 0)
+            ->where('sc.is_transfer', 0)
             ->select([
                 'sc.sort',
                 'sc.id',
@@ -209,13 +210,116 @@ class StudentClassController extends Controller
 
         $students = $request->input('data', []);
 
-        $success = StudentClass::whereIn('student_id', $students)->update(['class_id' => $request->new_class_id]);
+        // $success = StudentClass::whereIn('student_id', $students)->update(['class_id' => $request->new_class_id]);
 
-        if ($success) {
+        // $success = StudentClass::whereIn('student_id', $students)->update([
+        //     'is_transfer' => 1
+        // ]);
+
+        $success = StudentClass::whereIn('student_id', $students)
+            ->where('class_id', '!=', $request->new_class_id) // only old class
+            ->update(['is_transfer' => 1]);
+
+        $existStudent = StudentClass::where('class_id', $request->new_class_id)->get();
+
+        $countStudent = $existStudent->count();
+
+        $student_ids = [];
+
+        if ($countStudent == 0) {
+            $sort = 1;
+        } else {
+            $sort = $countStudent + 1;
+        }
+
+        $insert_student = [];
+
+        foreach ($students as $student) {
+            $insert_student[] = [
+                'student_id' => $student['id'],
+                'class_id' => $request->new_class_id,
+                'sort' => $sort++,
+                'is_transfer' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+            $student_ids[] = $student['id'];
+        }
+
+        if (empty($insert_student)) {
             return response()->json([
-                'message' => 'ផ្លាស់ប្ដូរបានជោគជ័យ',
-                'status' => 200
-            ]);
+                "message" => "No valid students to add",
+                "status" => 400
+            ], 400);
+        }
+
+        $model = StudentClass::insert($insert_student);
+
+        if ($model) {
+            if ($request->edu_id == 1 || $request->edu_id == '1') {
+                foreach ($student_ids as $student_id) {
+                    $scores = DB::table('score_primary_cc')
+                        ->where('class_id', $request->old_class_id)
+                        ->where('student_id', $student_id)
+                        ->get();
+
+                    if ($scores->isNotEmpty()) {
+                        $transferScores = [];
+
+                        foreach ($scores as $score) {
+                            $transferScores[] = [
+                                'student_id' => $score->student_id,
+                                'from_class_id' => $score->class_id ?? null,
+                                'class_id' => $request->new_class_id,
+                                'avg_m' => $score->avg_m ?? null,
+                                'month_id' => $score->month_id ?? null,
+                                'listent' => $score->listent ?? null,
+                                'speaking' => $score->speaking ?? null,
+                                'writing' => $score->writing ?? null,
+                                'reading' => $score->reading ?? null,
+                                'essay' => $score->essay ?? null,
+                                'grammar' => $score->grammar ?? null,
+                                'math' => $score->math ?? null,
+                                'chemistry' => $score->chemistry ?? null,
+                                'physical' => $score->physical ?? null,
+                                'history' => $score->history ?? null,
+                                'morality' => $score->morality ?? null,
+                                'art' => $score->art ?? null,
+                                'word' => $score->word ?? null,
+                                'pe' => $score->pe ?? null,
+                                'homework' => $score->homework ?? null,
+                                'healthy' => $score->healthy ?? null,
+                                'steam' => $score->steam ?? null,
+                                'approved' => $score->approved ?? null,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                        // Insert to transfer_score_primary table
+                        DB::table('transafer_score_primary')->insert($transferScores);
+                    }
+                }
+            }
+
+
+
+            // $addStudent = StudentClass::create([
+            //     'class_id' => $request->new_class_id,
+            //     'student_id' => $students
+
+            // ]);
+
+            if ($success && $model) {
+                return response()->json([
+                    'message' => 'ផ្លាស់ប្ដូរបានជោគជ័យ',
+                    'status' => 200
+                ]);
+            } else {
+                return response()->json([
+                    'message' => 'បរាជ័យក្នុងការផ្លាស់ប្ដូរ',
+                    'status' => 500
+                ], 500);
+            }
         }
     }
 }

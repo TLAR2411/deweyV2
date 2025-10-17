@@ -246,6 +246,8 @@ Route::post("/getOneSocial/{id}", [SocialController::class, "getOneSocial"]);
 
 Route::post("/showStudentHabbit", [StudentHabbitController::class, "showStudentHabbit"]);
 Route::post("/saveStudentHabit", [StudentHabbitController::class, "saveStudentHabit"]);
+
+
 Route::get('clear-data', function () {
     Artisan::call('route:clear');
     Artisan::call('cache:clear');
@@ -255,6 +257,8 @@ Route::get('clear-data', function () {
     Artisan::call('clear-compiled');
     return "Clear Complete";
 });
+
+Route::post("/getSubjectFilter", [TeacherClassController::class, 'getSubject']);
 
 // Route::post("/getTeacherInClass/{id}", [TeacherClassController::class, "getTeacherInClass"]);
 
