@@ -3,16 +3,16 @@
     <span
       class="d-flex align-center justify-center flex-wrap name customKhmerMoul text-green-darken-4"
     >
-      &copy; {{ new Date().getFullYear() }}
-      <VIcon icon="mdi-heart" color="error" size="1.25rem" class="mx-1" />
-      <a
+      <!-- &copy; {{ new Date().getFullYear() }} -->
+      <!-- <VIcon icon="mdi-heart" color="error" size="1.25rem" class="mx-1" /> -->
+      <!-- <a
         href="https://www.facebook.com/teang.tela/"
         target="_blank"
         rel="noopener noreferrer"
         class="text-green-darken-4 ms-1 customKhmerMoul name"
       >
         ICT Department ICONIC
-      </a>
+      </a> -->
 
       <p
         class="ml-4 text-orange font-weight-bold bg-orange-lighten-5 border rounded-xl px-3 py-0"

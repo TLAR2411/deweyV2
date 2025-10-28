@@ -11,6 +11,7 @@ use App\Http\Controllers\MonthController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\Transfer\TransferUpperController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoomController;
@@ -37,6 +38,8 @@ use App\Http\Controllers\SettingSemesterListController;
 use App\Http\Controllers\SocialController;
 use App\Http\Controllers\StudentHabbitController;
 use App\Http\Controllers\TeacherClassController;
+use App\Http\Controllers\Transfer\TransferPrimaryController;
+use App\Http\Controllers\Transfer\TransferSecondaryController;
 use App\Models\SettingSemesterList;
 use App\Models\TeacherClass;
 use Illuminate\Support\Facades\Auth;
@@ -246,6 +249,17 @@ Route::post("/getOneSocial/{id}", [SocialController::class, "getOneSocial"]);
 
 Route::post("/showStudentHabbit", [StudentHabbitController::class, "showStudentHabbit"]);
 Route::post("/saveStudentHabit", [StudentHabbitController::class, "saveStudentHabit"]);
+
+Route::post("/findStudentTransfer", [TransferPrimaryController::class, 'findStudentTransfer']);
+
+Route::post("/findStudentTransferUpper", [TransferUpperController::class, 'findStudentTransferUpper']);
+Route::post("/addScoreStudentTransferUpper", [TransferUpperController::class, 'addScoreStudentTransferUpper']);
+
+Route::post("/findStudentTransferSecondary", [TransferSecondaryController::class, 'findStudentTransferSecondary']);
+
+Route::post("/addScoreStudentTransfer", [TransferPrimaryController::class, 'addScoreStudentTransfer']);
+
+Route::post("/addScoreStudentTransferSecondary", [TransferSecondaryController::class, 'addScoreStudentTransferSecondary']);
 
 
 Route::get('clear-data', function () {

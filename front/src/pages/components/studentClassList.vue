@@ -479,7 +479,7 @@ const newStudentName = ref(null);
 const addScoreToNewStudent = (item) => {
   console.log("item", item);
 
-  newStudentId.value = item.id;
+  newStudentId.value = item.student_id;
   newStudentName.value = item.kh_name;
 
   console.log(newStudentName.value);
@@ -842,6 +842,7 @@ onMounted(() => {
       transition="dialog-transition"
     >
       <primary
+        :eduId="eduId"
         :classId="oldClassId"
         :newStudentId="newStudentId"
         :newStudentName="newStudentName"
@@ -854,6 +855,12 @@ onMounted(() => {
       scrollable
       transition="dialog-transition"
     >
+      <secondary
+        :eduId="eduId"
+        :classId="oldClassId"
+        :newStudentId="newStudentId"
+        :newStudentName="newStudentName"
+      />
     </VDialog>
     <!-- upper -->
     <VDialog
@@ -862,6 +869,12 @@ onMounted(() => {
       scrollable
       transition="dialog-transition"
     >
+      <upper
+        :eduId="eduId"
+        :classId="oldClassId"
+        :newStudentId="newStudentId"
+        :newStudentName="newStudentName"
+      />
     </VDialog>
   </div>
 </template>

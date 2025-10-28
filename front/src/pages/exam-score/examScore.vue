@@ -70,19 +70,27 @@ const classInYear = ref([]);
 
 const tabSearch = ref(false);
 
+const teacherRole = ref(null);
 watch(
   () => formSearch.value.class_id,
   (newVal) => {
     const foundClass = classroomFilter?.value?.find((e) => e.id == newVal);
+    // console.log("foundclass", foundClass);
     if (foundClass) {
       formSearch.value.level = foundClass.level;
+      teacherRole.value = foundClass.teacherRole;
     } else {
       formSearch.value.level = "";
     }
     console.log("level", formSearch.value.level);
+    console.log("teacherRole", teacherRole.value);
   },
   { immediate: true }
 );
+
+// watch(() => formSearch.value.class_id, (newV) => {
+
+// })
 
 watch(
   [() => formSearch.value.edu_id, () => formSearch.value.year_id],
@@ -416,8 +424,11 @@ watch(
 
 const subject = ref([]);
 
+const isSubject = ref(false);
+
 const getSubject = async () => {
   console.log("filter", filterSubject.value);
+  isSubject.value = true;
   try {
     await api.post("/getSubjectFilter", filterSubject.value).then((res) => {
       subject.value = res.data;
@@ -427,6 +438,8 @@ const getSubject = async () => {
       title: error.response.data.message,
       icon: "error",
     });
+  } finally {
+    isSubject.value = false;
   }
 };
 
@@ -604,14 +617,29 @@ onMounted(() => {
               <VTab class="customFont" :active-class="'active-tab'"
                 >តារាងបញ្ចូលពិន្ទុ</VTab
               >
-              <VTab class="customFont" :active-class="'active-tab'"
+              <VTab
+                v-if="teacherRole == 'classLoad'"
+                class="customFont"
+                :active-class="'active-tab'"
                 >តារាងទម្លាប់សិក្សា</VTab
               >
             </VTabs>
           </div>
 
+          <div
+            class="d-flex justify-center flex-column align-center"
+            style="margin-top: 100px"
+            v-if="isSubject"
+          >
+            <v-progress-circular
+              color="green-darken-4"
+              indeterminate
+            ></v-progress-circular>
+            <p class="customFont mt-2">សូមរងចាំ</p>
+          </div>
+
           <!-- primary -->
-          <VCardText style="margin-top: -10px">
+          <VCardText style="margin-top: -10px" v-else>
             <div v-if="alertMessage" class="text-center text-body-2 text-red">
               <p class="customFont">{{ alertMessage }}</p>
             </div>
@@ -673,7 +701,10 @@ onMounted(() => {
                 </div>
               </VWindowItem>
 
-              <VWindowItem value="studentHabit">
+              <VWindowItem
+                v-if="teacherRole == 'classLoad'"
+                value="studentHabit"
+              >
                 <v-table
                   fixed-header
                   height="460"

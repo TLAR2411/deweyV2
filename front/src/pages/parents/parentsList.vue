@@ -36,6 +36,7 @@ const getAllUser = async () => {
 };
 
 const deleteUser = async (id) => {
+  console.log(id);
   try {
     await api.post(`delete_user/${id}`).then((res) => {
       Toast.fire({
@@ -174,7 +175,7 @@ onMounted(async () => {
                 icon="mdi-delete"
                 size="sm"
                 flat
-                @click="deleteUser(row.item.user_id)"
+                @click="deleteUser(row.item.id)"
               >
               </v-btn>
             </template>

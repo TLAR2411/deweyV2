@@ -1,6 +1,9 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { api } from "@/utils/axios";
+import Toast from "@/helper";
+
+const isAdd = ref(false);
 
 const props = defineProps({
   newStudentName: {
@@ -9,26 +12,22 @@ const props = defineProps({
   newStudentId: {
     type: String,
   },
+  classId: {
+    type: String,
+  },
+  eduId: {
+    type: String,
+  },
 });
 
-console.log(props);
+const isSearch = ref(false);
 
-const months = ref([]);
-
-const getMonth = async () => {
-  try {
-    await api.post("get_all_month").then((res) => {
-      months.value = res.data;
-    });
-  } catch (error) {
-    console.log(error);
-  }
-};
+const isFind = ref(false);
 
 const form = ref({
   student_id: props.newStudentId,
   month_id: null,
-  class_id: null,
+  class_id: props.classId,
   avg_m: null,
   listent: null,
   speaking: null,
@@ -49,12 +48,110 @@ const form = ref({
   steam: null,
 });
 
-const addNewstudentScore = () => {
-  console.log("score", form.value);
+const formFind = ref({
+  eduId: props.eduId,
+  studentId: props.newStudentId,
+  classId: props.classId,
+  monthId: form.value.month_id,
+});
+
+watch(
+  () => form.value.month_id,
+  (n) => {
+    formFind.value.monthId = n;
+  }
+);
+
+const findStudentTransfer = async () => {
+  isSearch.value = true;
+  isFind.value = true;
+  try {
+    await api
+      .post("findStudentTransfer", formFind.value, {
+        headers: {
+          "Content-Type": "Application/json",
+        },
+      })
+      .then((res) => {
+        if (res.data.status == 1 || res.data.status == "1") {
+          form.value = res.data.data[0];
+        } else {
+          form.value = {
+            student_id: props.newStudentId,
+            class_id: props.classId,
+            month_id: form.value.month_id,
+            avg_m: null,
+            listent: null,
+            speaking: null,
+            writing: null,
+            reading: null,
+            essay: null,
+            grammar: null,
+            math: null,
+            chemistry: null,
+            physical: null,
+            history: null,
+            morality: null,
+            art: null,
+            word: null,
+            pe: null,
+            homework: null,
+            healthy: null,
+            steam: null,
+          };
+        }
+
+        console.log("return", res.data.data);
+      });
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isFind.value = false;
+  }
+};
+
+console.log(props);
+
+const months = ref([]);
+
+const getMonth = async () => {
+  try {
+    await api.post("get_all_month").then((res) => {
+      months.value = res.data;
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const addNewstudentScore = async () => {
+  try {
+    isAdd.value = true;
+    await api
+      .post("addScoreStudentTransfer", form.value, {
+        headers: {
+          "Content-Type": "Application/json",
+        },
+      })
+      .then((res) => {
+        Toast.fire({
+          title: res.data.message,
+          icon: "success",
+        });
+      });
+  } catch (error) {
+    Toast.fire({
+      title: error.response.data.message,
+      icon: "error",
+    });
+  } finally {
+    isAdd.value = false;
+  }
 };
 
 onMounted(() => {
   getMonth();
+  // findStudentTransfer();
 });
 </script>
 <template>
@@ -70,7 +167,7 @@ onMounted(() => {
               {{ props.newStudentName }}
             </h2>
           </VCol>
-          <VCol cols="12" sm="6" md="3">
+          <VCol cols="12" sm="6" md="6" class="d-flex ga-2">
             <VSelect
               :items="months"
               item-value="id"
@@ -82,10 +179,20 @@ onMounted(() => {
               variant="outlined"
               v-model="form.month_id"
             />
+            <VBtn
+              variant="tonal"
+              color="green"
+              class="customFont"
+              @click="findStudentTransfer"
+              :loading="isFind"
+              :disabled="isFind"
+            >
+              ស្វែងរក</VBtn
+            >
           </VCol>
         </VRow>
       </VCardText>
-      <VCardText style="margin-top: -20px; margin-bottom: 10px">
+      <VCardText style="margin-top: -20px; margin-bottom: 10px" v-if="isSearch">
         <VTable fixed-header class="border customFont">
           <thead class="my-custom-table">
             <tr>
@@ -298,6 +405,8 @@ onMounted(() => {
             variant="tonal"
             class="customFont"
             color="green"
+            :loading="isAdd"
+            :disabled="isAdd"
             @click="addNewstudentScore"
             >បញ្ចូលពិន្ទុ</v-btn
           >

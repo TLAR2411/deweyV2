@@ -58,6 +58,7 @@ class TeacherClassController extends Controller
 
             ->from('teacher_class as tc') // Use alias directly
             ->where('tc.teacherId', $teacherId)
+            ->where('tc.deleted', 0)
             ->leftJoin('classrooms as c', 'c.id', '=', 'tc.classId')
             ->leftJoin('academicyears as y', 'c.year_id', '=', 'y.id')
             ->leftJoin('grades as g', 'g.id', '=', 'c.grade_id')
@@ -74,6 +75,7 @@ class TeacherClassController extends Controller
                 'y.name as year',
                 'y.id as year_id',
                 'e.id as education_id',
+                'tc.role as teacherRole'
             ])
             ->groupBy([
                 'c.id',
@@ -81,7 +83,8 @@ class TeacherClassController extends Controller
                 'gl.level',
                 'e.id',
                 'y.name',
-                'y.id'
+                'y.id',
+                'tc.role'
             ])
             // ->whereBranch($campusId)
             ->get();
