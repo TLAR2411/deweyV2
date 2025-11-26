@@ -138,16 +138,16 @@ class ClassroomController extends Controller
     }
     public function updateClassroom(ClassroomRequest $request)
     {
-        $existingClass = DB::table('classrooms')
-            ->where('grade_id', $request->grade_id)
-            ->where('year_id', $request->year_id)
-            ->whereNot('id', $request->id)
-            ->exists();
-        if ($existingClass) {
-            return response()->json([
-                'message' => "ថ្នាក់នេះបានបង្កើតម្ដងរួចហើយ"
-            ], 400);
-        }
+        // $existingClass = DB::table('classrooms')
+        //     ->where('grade_id', $request->grade_id)
+        //     ->where('year_id', $request->year_id)
+        //     ->whereNot('id', $request->id)
+        //     ->exists();
+        // if ($existingClass) {
+        //     return response()->json([
+        //         'message' => "ថ្នាក់នេះបានបង្កើតម្ដងរួចហើយ"
+        //     ], 400);
+        // }
 
         $data = Classroom::findOrFail($request->id)->update($request->validated() + [
             "description" => $request->description,

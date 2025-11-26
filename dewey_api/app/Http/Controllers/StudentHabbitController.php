@@ -20,7 +20,9 @@ class StudentHabbitController extends Controller
             $student_class = DB::table('view_studentscore')
                 ->where('class_id', $request->class_id)
                 ->where('deleted', 0)
-                ->orderby('kh_name')
+                ->where('is_transfer', 0)
+                ->orderby('sort', 'asc')
+                // ->orderby('kh_name')
                 ->get();
             return response()->json(
                 [
@@ -41,6 +43,7 @@ class StudentHabbitController extends Controller
                 ->join('students', 'student_class.student_id', '=', 'students.id')
                 ->join('classrooms', 'student_class.class_id', '=', 'classrooms.id')
                 ->where('classrooms.id', $request->class_id)
+                ->where('student_class.deleted', 0)
 
                 ->whereRaw('student_class.student_id NOT IN (SELECT student_id from tbl_study_habits where tbl_study_habits.class_id=' . $request->class_id . ' and
                         tbl_study_habits.month_id = ' . $request->month_id . ' )')
@@ -83,36 +86,62 @@ class StudentHabbitController extends Controller
         try {
             // Delete existing records if status is not 1
             if ($request->status != 1) {
-                DB::table('tbl_study_habits')
+                $del = DB::table('tbl_study_habits')
                     ->where('class_id', $request->class_id)
                     ->where('month_id', $request->month_id)
                     ->delete();
-            }
 
-            // Filter students with numeric keys
-            $students = array_filter($request->all(), function ($key) {
-                return is_numeric($key);
-            }, ARRAY_FILTER_USE_KEY);
+                if ($del) {
+                    $students = array_filter($request->all(), function ($key) {
+                        return is_numeric($key);
+                    }, ARRAY_FILTER_USE_KEY);
 
-            // Insert new records
-            foreach ($students as $student) {
-                StudentHabbit::create([
-                    'class_id' => $request->class_id,
-                    'month_id' => $request->month_id,
-                    'student_id' => $student['id'],
-                    'get_along_with_other' => $student['get_along_with_other'] ?? null,
-                    'neat_and_tidy' => $student['neat_and_tidy'] ?? null,
-                    'pay_attention' => $student['pay_attention'] ?? null,
-                    'respects_school' => $student['respects_school'] ?? null,
-                    'take_care' => $student['take_care'] ?? null,
-                    'work' => $student['work'] ?? null,
+                    // Insert new records
+                    foreach ($students as $student) {
+                        StudentHabbit::create([
+                            'class_id' => $request->class_id,
+                            'month_id' => $request->month_id,
+                            'student_id' => $student['student_id'],
+                            'get_along_with_other' => $student['get_along_with_other'] ?? null,
+                            'neat_and_tidy' => $student['neat_and_tidy'] ?? null,
+                            'pay_attention' => $student['pay_attention'] ?? null,
+                            'respects_school' => $student['respects_school'] ?? null,
+                            'take_care' => $student['take_care'] ?? null,
+                            'work' => $student['work'] ?? null,
+                        ]);
+                    }
+
+                    return response()->json([
+                        'message' => 'បញ្ចូលបានជោគជ័យ',
+                        'status' => 0,
+                    ]);
+                }
+            } else {
+                // Filter students with numeric keys
+                $students = array_filter($request->all(), function ($key) {
+                    return is_numeric($key);
+                }, ARRAY_FILTER_USE_KEY);
+
+                // Insert new records
+                foreach ($students as $student) {
+                    StudentHabbit::create([
+                        'class_id' => $request->class_id,
+                        'month_id' => $request->month_id,
+                        'student_id' => $student['id'],
+                        'get_along_with_other' => $student['get_along_with_other'] ?? null,
+                        'neat_and_tidy' => $student['neat_and_tidy'] ?? null,
+                        'pay_attention' => $student['pay_attention'] ?? null,
+                        'respects_school' => $student['respects_school'] ?? null,
+                        'take_care' => $student['take_care'] ?? null,
+                        'work' => $student['work'] ?? null,
+                    ]);
+                }
+
+                return response()->json([
+                    'message' => 'បញ្ចូលបានជោគជ័យ',
+                    'status' => 0,
                 ]);
             }
-
-            return response()->json([
-                'message' => 'បញ្ចូលបានជោគជ័យ',
-                'status' => 0,
-            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error: ' . $e->getMessage(),

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Storage;
 
@@ -30,7 +31,8 @@ class User extends Authenticatable
         "campus_ids",
         "role_id",
         "is_AllCampus",
-        "teacher_id"
+        "teacher_id",
+        "camp_id"
     ];
 
     /**
@@ -86,13 +88,67 @@ class User extends Authenticatable
         });
     }
 
+    // public function scopeWhereBranch($query, string $campusId)
+    // {
+    //     return $query->when($campusId != "*", function ($query) use ($campusId) {
+    //         return $query->where('users.camp_id', $campusId); // Corrected column name
+    //     })->when($campusId == "*", function ($query) {
+    //         return $query->join('user_campus as uc', 'uc.campus_id', '=', 'users.camp_id')
+    //             ->where('uc.user_id', Auth::id());
+    //     });
+    // }
+
+
+    // public function scopeWhereBranch($query, string $campusId)
+    // {
+    //     return $query->when($campusId != "*", function ($query) use ($campusId) {
+    //         return $query->join('user_campus as uc', 'uc.user_id', '=', 'users.id')
+    //             ->where('uc.campus_id', $campusId);
+    //     })->when($campusId == "*", function ($query) {
+    //         $userId = Auth::id();
+    //         return $query->join('user_campus as uc', 'uc.user_id', '=', 'users.id')
+    //             ->whereIn('uc.campus_id', function ($sub) use ($userId) {
+    //                 $sub->select('campus_id')
+    //                     ->from('user_campus')
+    //                     ->where('user_id', $userId);
+    //             });
+    //     });
+    // }
+
+
     public function scopeWhereBranch($query, string $campusId)
     {
-        return $query->when($campusId != "*", function ($query) use ($campusId) {
-            return $query->where('users.camp_id', $campusId); // Corrected column name
-        })->when($campusId == "*", function ($query) {
-            return $query->join('user_campus as uc', 'uc.campus_id', '=', 'users.camp_id')
-                ->where('uc.user_id', Auth::id());
-        });
+        $userId = Auth::id();
+
+        // Check if auth user has campus in user_campus table
+        $hasCampus = DB::table('user_campus')
+            ->where('user_id', $userId)
+            ->exists();
+
+        return $query
+            ->when($campusId != "*", function ($query) use ($campusId, $hasCampus) {
+                // Case 1: user has no user_campus
+                if (!$hasCampus) {
+                    return $query->where('users.camp_id', $campusId);
+                }
+
+                // Case 2: user has user_campus record → use join
+                return $query->join('user_campus as uc', 'uc.user_id', '=', 'users.id')
+                    ->where('uc.campus_id', $campusId);
+            })
+            ->when($campusId == "*", function ($query) use ($userId, $hasCampus) {
+                // Case A: user has no campus record → fallback
+                if (!$hasCampus) {
+                    return $query->where('users.id', $userId);
+                }
+
+                // Case B: user has campus records → normal logic
+                return $query->join('user_campus as uc', 'uc.user_id', '=', 'users.id')
+                    ->whereIn('uc.campus_id', function ($sub) use ($userId) {
+                        $sub->select('campus_id')
+                            ->from('user_campus')
+                            ->where('user_id', $userId);
+                    });
+            });
     }
 }

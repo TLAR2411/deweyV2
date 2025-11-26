@@ -159,6 +159,8 @@ Route::group([
 
     // Exam Khmer controller
     Route::post('/showstudent', [ScoreKhmerController::class, 'showstudent']);
+
+
     Route::post('/get_all_month', [MonthController::class, 'get_all_month']);
     Route::post('/add_student_score', [ScoreKhmerController::class, 'add_student_score']);
     Route::post('/deleteRecord', [ScoreKhmerController::class, 'deleteRecord']);
@@ -203,6 +205,7 @@ Route::group([
 
     Route::post('/getSettingScoreConfig', [SettingScoreConfigController::class, "getSettingScoreConfig"]);
 });
+
 
 Route::post("/createSemester", [SettingMonthSemesterController::class, 'createSemester']);
 
@@ -249,6 +252,9 @@ Route::post("/getOneSocial/{id}", [SocialController::class, "getOneSocial"]);
 
 Route::post("/showStudentHabbit", [StudentHabbitController::class, "showStudentHabbit"]);
 Route::post("/saveStudentHabit", [StudentHabbitController::class, "saveStudentHabit"]);
+
+Route::post('/approveScore', [ScoreKhmerController::class, 'approveScore']);
+
 
 Route::post("/findStudentTransfer", [TransferPrimaryController::class, 'findStudentTransfer']);
 

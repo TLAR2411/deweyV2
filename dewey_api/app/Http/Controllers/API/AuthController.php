@@ -44,6 +44,10 @@ class AuthController extends Controller
 
         ]);
 
+        // if ($request->student_id) {
+        //     User::create(['camp_id' => $request->campus_ids]);
+        // }
+
         foreach ($campus as $cam) {
             DB::table('user_campus')->insert([
                 'user_id' => $user->id,
@@ -158,6 +162,7 @@ class AuthController extends Controller
         // $allUser = User::whereBranch($campusId)->get();
         $allUser = User::query()
             ->whereBranch($campusId)
+
             ->select("users.*")
             ->get();
         return response()->json($allUser);

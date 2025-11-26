@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
+use Illuminate\Support\Facades\Auth;
 
 class ScoreKhmerController extends Controller
 {
@@ -261,6 +263,148 @@ class ScoreKhmerController extends Controller
     public function add_student_score(Request $request)
     {
 
+        if ($request->role_id == 4) {
+            $now = now('Asia/Bangkok');
+            $currentDay = $now->format('d');
+            $currentMonth = (int) $now->format('m');
+            $scoreMonth = (int) $request->month_id;
+
+            if ($scoreMonth !== $currentMonth) {
+                return response()->json([
+                    "message" => "មិនអាចបញ្ចូលពិន្ទុខែចាស់បានទេ",
+                    "status" => 1
+                ]);
+            }
+
+
+            if ($currentDay >= 27 || $currentDay >= '27') {
+                if ($request->approve == 1) {
+                    return response()->json([
+                        "message" => "មិនអាចបញ្ចូលពិន្ទុបានទេ ផុតថ្ងៃកំណត់",
+                        "status" => 1
+                    ]);
+                }
+            }
+
+
+
+
+
+            // $day = 28;
+
+            // return response()->json([
+            //     "message" => $now->format('m'),
+            //     "data" => $request->month_id,
+            // ]);
+        }
+
+        // if ($request->edu_id == 1) {
+
+        //     if (empty($request->avg_m)) {
+        //         return response()->json([
+        //             "message" => "សូមបញ្ចូលតួរចែកនៅខាងក្រោម",
+        //             "isAlert" => "avg_m"
+        //         ]);
+        //     }
+
+        //     $students = array_filter($request->all(), function ($key) {
+        //         return is_numeric($key);
+        //     }, ARRAY_FILTER_USE_KEY);
+
+        //     foreach ($students as $student) {
+        //         DB::beginTransaction();
+        //         try {
+        //             if ($request->status == 1) {
+        //                 // Insert new student score
+        //                 DB::table('score_primary_cc')->insert([
+        //                     'student_id' => $student['id'],
+        //                     'class_id' => $student['class_id'],
+        //                     'month_id' => $student['month_id'],
+        //                     'avg_m' => $student['avg_m'],
+        //                     'listent' => $student['listent'] ?? null,
+        //                     'speaking' => $student['speaking'] ?? null,
+        //                     'writing' => $student['writing'] ?? null,
+        //                     'reading' => $student['reading'] ?? null,
+        //                     'essay' => $student['essay'] ?? null,
+        //                     'grammar' => $student['grammar'] ?? null,
+        //                     'math' => $student['math'] ?? null,
+        //                     'chemistry' => $student['chemistry'] ?? null,
+        //                     'physical' => $student['physical'] ?? null,
+        //                     'history' => $student['history'] ?? null,
+        //                     'morality' => $student['morality'] ?? null,
+        //                     'art' => $student['art'] ?? null,
+        //                     'word' => $student['word'] ?? null,
+        //                     'pe' => $student['pe'] ?? null,
+        //                     'homework' => $student['homework'] ?? null,
+        //                     'healthy' => $student['healthy'] ?? null,
+        //                     'steam' => $student['steam'] ?? null,
+        //                 ]);
+        //             } else {
+        //                 // Delete existing scores for this student
+        //                 // DB::table('score_primary_cc')
+        //                 //     ->where('class_id', $request->class_id)
+        //                 //     ->where('month_id', $request->month_id)
+        //                 //     ->delete();
+
+        //                 // Insert new score
+        //                 DB::table('score_primary_cc')
+        //                     ->where('class_id', $student['class_id'])
+        //                     ->where('month_id', $student['month_id'])
+        //                     ->where('student_id', $student['student_id'])
+        //                     ->update([
+        //                         'student_id' => $student['student_id'],
+        //                         // 'class_id' => $student['class_id'],
+        //                         // 'month_id' => $student['month_id'],
+        //                         'avg_m' => $student['avg_m'],
+        //                         'listent' => $student['listent'] ?? null,
+        //                         'speaking' => $student['speaking'] ?? null,
+        //                         'writing' => $student['writing'] ?? null,
+        //                         'reading' => $student['reading'] ?? null,
+        //                         'essay' => $student['essay'] ?? null,
+        //                         'grammar' => $student['grammar'] ?? null,
+        //                         'math' => $student['math'] ?? null,
+        //                         'chemistry' => $student['chemistry'] ?? null,
+        //                         'physical' => $student['physical'] ?? null,
+        //                         'history' => $student['history'] ?? null,
+        //                         'morality' => $student['morality'] ?? null,
+        //                         'art' => $student['art'] ?? null,
+        //                         'word' => $student['word'] ?? null,
+        //                         'pe' => $student['pe'] ?? null,
+        //                         'homework' => $student['homework'] ?? null,
+        //                         'healthy' => $student['healthy'] ?? null,
+        //                         'steam' => $student['steam'] ?? null,
+        //                     ]);
+        //             }
+
+        //             DB::commit();
+
+
+        //             $time = now()->toDateTimeString();
+        //             $userId = Auth::id();
+        //             $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()}";
+        //             Storage::append("logs/score.txt", $message);
+        //         } catch (\Exception $e) {
+        //             DB::rollBack();
+
+        //             // Optional: log error per student
+        //             Storage::append(
+        //                 "logs/score_error.txt",
+        //                 "Error studentId:" . ($student['id'] ?? $student['student_id'] ?? 'N/A') .
+        //                     " | " . $e->getMessage()
+        //             );
+
+        //             return response()->json([
+        //                 "message" => "បញ្ចូលមិនបានជោគជ័យ",
+        //                 "status" => 1
+        //             ]);
+        //         }
+        //     }
+        //     return response()->json([
+        //         "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
+        //         "status" => 0
+        //     ]);
+        // }
+
         if ($request->edu_id == 1) {
 
             if ($request->avg_m == '' || $request->avg_m == null) {
@@ -306,6 +450,11 @@ class ScoreKhmerController extends Controller
                 $data = DB::table('score_primary_cc')->insert($array_save);
 
                 if ($data) {
+
+                    $time = now()->toDateTimeString();
+                    $userId = Auth::id();
+                    $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()}";
+                    Storage::append("logs/score.txt", $message);
                     return response()->json(
                         [
                             "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
@@ -321,60 +470,74 @@ class ScoreKhmerController extends Controller
                     );
                 }
             } else {
-                $del = DB::table('score_primary_cc')
-                    ->where('class_id', $request->class_id)
-                    ->where('month_id', $request->month_id)
-                    ->delete();
+                try {
+                    DB::beginTransaction();
+                    $del = DB::table('score_primary_cc')
+                        ->where('class_id', $request->class_id)
+                        ->where('month_id', $request->month_id)
+                        ->delete();
 
-                $array_save2 = [];
-                $students = array_filter($request->all(), function ($key) {
-                    return is_numeric($key); // Keep only numeric keys (0, 1, 2, ...)
-                }, ARRAY_FILTER_USE_KEY);
-                foreach ($students as $student) {
-                    $array_save2[] = [
+                    $array_save2 = [];
+                    $students = array_filter($request->all(), function ($key) {
+                        return is_numeric($key); // Keep only numeric keys (0, 1, 2, ...)
+                    }, ARRAY_FILTER_USE_KEY);
+                    foreach ($students as $student) {
+                        $array_save2[] = [
 
-                        // change id to student_id
-                        'student_id' => $student['student_id'],
-                        'class_id' => $student['class_id'],
-                        'month_id' => $student['month_id'],
-                        'avg_m' => $student['avg_m'],
-                        'listent' => $student['listent'] ?? null,
-                        'speaking' => $student['speaking'] ?? null,
-                        'writing' => $student['writing'] ?? null,
-                        'reading' => $student['reading'] ?? null,
-                        'essay' => $student['essay'] ?? null,
-                        'grammar' => $student['grammar'] ?? null,
-                        'math' => $student['math'] ?? null,
-                        'chemistry' => $student['chemistry'] ?? null,
-                        'physical' => $student['physical'] ?? null,
-                        'history' => $student['history'] ?? null,
-                        'morality' => $student['morality'] ?? null,
-                        'art' => $student['art'] ?? null,
-                        'word' => $student['word'] ?? null,
-                        'pe' => $student['pe'] ?? null,
-                        'homework' => $student['homework'] ?? null,
-                        'healthy' => $student['healthy'] ?? null,
-                        'steam' => $student['steam'] ?? null,
-                    ];
-                }
+                            // change id to student_id
+                            'student_id' => $student['student_id'],
+                            'class_id' => $student['class_id'],
+                            'month_id' => $student['month_id'],
+                            'avg_m' => $student['avg_m'],
+                            'listent' => $student['listent'] ?? null,
+                            'speaking' => $student['speaking'] ?? null,
+                            'writing' => $student['writing'] ?? null,
+                            'reading' => $student['reading'] ?? null,
+                            'essay' => $student['essay'] ?? null,
+                            'grammar' => $student['grammar'] ?? null,
+                            'math' => $student['math'] ?? null,
+                            'chemistry' => $student['chemistry'] ?? null,
+                            'physical' => $student['physical'] ?? null,
+                            'history' => $student['history'] ?? null,
+                            'morality' => $student['morality'] ?? null,
+                            'art' => $student['art'] ?? null,
+                            'word' => $student['word'] ?? null,
+                            'pe' => $student['pe'] ?? null,
+                            'homework' => $student['homework'] ?? null,
+                            'healthy' => $student['healthy'] ?? null,
+                            'steam' => $student['steam'] ?? null,
+                        ];
+                    }
 
 
-                $data = DB::table('score_primary_cc')
-                    ->insert($array_save2);
-                if ($data) {
-                    return response()->json(
-                        [
-                            "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
-                            "status" => 0
-                        ]
-                    );
-                } else {
-                    return response()->json(
-                        [
-                            "message" => "Something Wrong !",
-                            "status" => 1
-                        ]
-                    );
+                    $data = DB::table('score_primary_cc')
+                        ->insert($array_save2);
+                    if ($data) {
+
+                        $time = now()->toDateTimeString();
+                        $userId = Auth::id();
+                        $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()}";
+                        Storage::append("logs/score.txt", $message);
+
+                        DB::commit();
+
+                        return response()->json(
+                            [
+                                "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
+                                "status" => 0
+                            ]
+                        );
+                    } else {
+                        DB::rollBack();
+                        return response()->json(
+                            [
+                                "message" => "Something Wrong !",
+                                "status" => 1
+                            ]
+                        );
+                    }
+                } catch (\Throwable $th) {
+                    DB::rollBack();
                 }
             }
         }
@@ -415,6 +578,7 @@ class ScoreKhmerController extends Controller
                         'english' => $student['english'] ?? null,
                         'pe' => $student['pe'] ?? null,
                         'computer' => $student['computer'] ?? null,
+                        'approved' => $student['approved'] ?? 0
 
                     ];
                     // 
@@ -423,6 +587,11 @@ class ScoreKhmerController extends Controller
                 $data = DB::table('score_secondary_cc')->insert($array_save);
 
                 if ($data) {
+
+                    $time = now()->toDateTimeString();
+                    $userId = Auth::id();
+                    $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()}";
+                    Storage::append("logs/score.txt", $message);
                     return response()->json(
                         [
                             "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
@@ -469,6 +638,7 @@ class ScoreKhmerController extends Controller
                             'english' => $student['english'] ?? null,
                             'pe' => $student['pe'] ?? null,
                             'computer' => $student['computer'] ?? null,
+                            'approved' => $student['approved'] ?? 0
 
                         ];
                     }
@@ -477,6 +647,10 @@ class ScoreKhmerController extends Controller
                     ->insert($array_save2);
 
                 if ($data) {
+                    $time = now()->toDateTimeString();
+                    $userId = Auth::id();
+                    $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()}";
+                    Storage::append("logs/score.txt", $message);
                     return response()->json(
                         [
                             "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
@@ -526,6 +700,7 @@ class ScoreKhmerController extends Controller
                         'english' => $student['english'] ?? null,
                         'pe' => $student['pe'] ?? null,
                         'computer' => $student['computer'] ?? null,
+                        'approved' => $student['approved'] ?? 0
 
                     ];
                 }
@@ -533,6 +708,12 @@ class ScoreKhmerController extends Controller
                 $data = DB::table('score_upper_cc')->insert($array_save);
 
                 if ($data) {
+
+                    $time = now()->toDateTimeString();
+                    $userId = Auth::id();
+                    $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()} ";
+                    Storage::append("logs/score.txt", $message);
+
                     return response()->json(
                         [
                             "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
@@ -577,12 +758,17 @@ class ScoreKhmerController extends Controller
                             'english' => $student['english'] ?? null,
                             'pe' => $student['pe'] ?? null,
                             'computer' => $student['computer'] ?? null,
+                            'approved' => $student['approved'] ?? 0
                         ];
                     }
                     $data = DB::table('score_upper_cc')
                         ->insert($array_save2);
 
                     if ($data) {
+                        $time = now()->toDateTimeString();
+                        $userId = Auth::id();
+                        $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()} ";
+                        Storage::append("logs/score.txt", $message);
                         return response()->json(
                             [
                                 "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
@@ -600,6 +786,45 @@ class ScoreKhmerController extends Controller
                     }
                 }
             }
+        }
+    }
+
+
+    public function approveScore(Request $request)
+    {
+        if ($request->edu_id == 3) {
+            $data = DB::table('score_upper_cc')
+                ->where('class_id', $request->class_id)
+                ->where('month_id', $request->month_id)
+                ->update([
+                    'approved' => DB::raw('CASE WHEN approved = 1 THEN 0 ELSE 1 END')
+                ]);
+            return response()->json([
+                "message" => "success",
+                "status" => 200
+            ]);
+        } else if ($request->edu_id == 2) {
+            $data = DB::table('score_secondary_cc')
+                ->where('class_id', $request->class_id)
+                ->where('month_id', $request->month_id)
+                ->update([
+                    'approved' => DB::raw('CASE WHEN approved = 1 THEN 0 ELSE 1 END')
+                ]);
+            return response()->json([
+                "message" => "success",
+                "status" => 200
+            ]);
+        } else {
+            $data = DB::table('score_primary_cc')
+                ->where('class_id', $request->class_id)
+                ->where('month_id', $request->month_id)
+                ->update([
+                    'approved' => DB::raw('CASE WHEN approved = 1 THEN 0 ELSE 1 END')
+                ]);
+            return response()->json([
+                "message" => "success",
+                "status" => 200
+            ]);
         }
     }
 }
