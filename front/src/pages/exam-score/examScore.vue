@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onWatcherCleanup, ref, watch } from "vue";
+import { onMounted, computed, ref, watch } from "vue";
 import axios from "axios";
 import { useRoute } from "vue-router";
 import { api } from "@/utils/axios";
@@ -34,6 +34,7 @@ const campus_id = ref(settingStore.campus_id);
 const isSearch = ref(true);
 const isBtnSearch = ref(false);
 
+const textApprove = ref("មិនទាន់អនុញ្ញាតិ");
 const status = ref("");
 
 const checkLoading = ref(true);
@@ -54,6 +55,8 @@ const checkAdd = ref(false);
 
 const isloadingAdd = ref(false);
 
+const isApprove = ref(null);
+
 const formSearch = ref({
   edu_id: "",
   class_id: "",
@@ -71,22 +74,6 @@ const classInYear = ref([]);
 const tabSearch = ref(false);
 
 const teacherRole = ref(null);
-watch(
-  () => formSearch.value.class_id,
-  (newVal) => {
-    const foundClass = classroomFilter?.value?.find((e) => e.id == newVal);
-    // console.log("foundclass", foundClass);
-    if (foundClass) {
-      formSearch.value.level = foundClass.level;
-      teacherRole.value = foundClass.teacherRole;
-    } else {
-      formSearch.value.level = "";
-    }
-    console.log("level", formSearch.value.level);
-    console.log("teacherRole", teacherRole.value);
-  },
-  { immediate: true }
-);
 
 // watch(() => formSearch.value.class_id, (newV) => {
 
@@ -246,6 +233,25 @@ const findStudentHabit = async () => {
   }
 };
 
+watch(
+  () => formSearch.value.class_id,
+  (newVal) => {
+    const foundClass = classroomFilter?.value?.find((e) => e.id == newVal);
+    // console.log("foundclass", foundClass);
+    if (foundClass) {
+      formSearch.value.level = foundClass.level;
+      teacherRole.value = foundClass.teacherRole;
+
+      console.log("teacherRole", teacherRole.value);
+      console.log("teacherabc", foundClass);
+    } else {
+      formSearch.value.level = "";
+    }
+    console.log("level", formSearch.value.level);
+  },
+  { immediate: true }
+);
+
 const alertMessage = ref();
 
 const addScore = async () => {
@@ -260,7 +266,11 @@ const addScore = async () => {
     class_id: formSearch.value.class_id,
     month_id: formSearch.value.month_id,
     avg_m: avg_m.value,
+    approve: isApprove.value,
+    role_id: user_role_id.value,
   };
+
+  console.log("Data", data);
 
   Object.keys(data).forEach((key) => {
     if (isNaN(key)) return; // Skip non-numeric keys like class_id, edu_id, etc.
@@ -368,7 +378,10 @@ const deleteRecordScore = async (id) => {
   }
 };
 
+const loadingStudentHabit = ref(false);
+
 const addStudentHabit = async () => {
+  loadingStudentHabit.value = true;
   const data = {
     ...student_habits.value,
     status: statusHabit.value,
@@ -385,7 +398,7 @@ const addStudentHabit = async () => {
   });
 
   try {
-    api
+    await api
       .post("/saveStudentHabit", data, {
         headers: {
           "Content-Type": "application/json",
@@ -403,6 +416,9 @@ const addStudentHabit = async () => {
       title: error.response.data.message,
       icon: "error",
     });
+  } finally {
+    loadingStudentHabit.value = false;
+    student_habits.value = null;
   }
 
   console.log(data);
@@ -459,6 +475,17 @@ const findInfo = async () => {
       })
       .then((res) => {
         students_scores.value = res.data.student_class;
+
+        isApprove.value = students_scores.value[0].approved;
+
+        if (students_scores.value[0].approved == 1) {
+          textApprove.value = "អនុញ្ញាតិ";
+        } else {
+          textApprove.value = "មិនទាន់អនុញ្ញាតិ";
+        }
+
+        // console.log("StudentScoreValue", students_scores.value);
+
         status.value = res.data.status;
         avg_m.value = res.data.avg_m;
         level.value = res.data.level;
@@ -492,6 +519,61 @@ const findInfo = async () => {
     }
   }
 };
+
+const approveScore = async () => {
+  isBtnSearch.value = false;
+  isSearch.value = true;
+
+  const data = {
+    // ...students_scores.value,
+    edu_id: formSearch.value.edu_id,
+    status: status.value,
+    class_id: formSearch.value.class_id,
+    month_id: formSearch.value.month_id,
+  };
+
+  // Object.keys(data).forEach((key) => {
+  //   if (isNaN(key)) return; // Skip non-numeric keys like class_id, edu_id, etc.
+  //   data[key] = {
+  //     ...data[key],
+  //     month_id: formSearch.value.month_id, // Assign month_id to
+  //   };
+  // });
+
+  try {
+    await api
+      .post("/approveScore", data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then((res) => {
+        if (res.data.status == 200 || res.data.message == "200") {
+          Toast.fire({
+            title: res.data.message,
+            icon: "success",
+          });
+
+          textApprove.value = "អនុញ្ញាតិ";
+        }
+      });
+  } catch (error) {
+    Toast.fire({
+      title: error.response.data.message,
+      icon: "error",
+    });
+  } finally {
+    isPrimary.value = false;
+    isHighschool.value = false;
+    isSecondary.value = false;
+    checkAdd.value = false;
+    tabSearch.value = false;
+  }
+};
+
+const hasPrimarySubject = computed(() => {
+  return subject.value.some((item) => item.subject_name.includes("បឋមសិក្សា"));
+});
 
 onMounted(() => {
   get_year();
@@ -532,6 +614,17 @@ onMounted(() => {
             variant="tonal"
             >ស្វែងរកថ្នាក់</VBtn
           >
+
+          <VBtn
+            prepend-icon="mdi-check-all"
+            v-if="isBtnSearch && user_role_id != 4"
+            @click="approveScore"
+            :color="textApprove == 'អនុញ្ញាតិ' ? 'green' : 'orange'"
+            class="customFont mt-3 ml-3"
+            variant="tonal"
+          >
+            {{ textApprove }}
+          </VBtn>
 
           <div class="mt-3" v-if="isSearch">
             <v-col cols="" md="3" sm="6" class="d-flex ga-2">
@@ -618,7 +711,11 @@ onMounted(() => {
                 >តារាងបញ្ចូលពិន្ទុ</VTab
               >
               <VTab
-                v-if="teacherRole == 'classLoad'"
+                v-if="
+                  teacherRole == 'classLoad' ||
+                  teacherRole === 'classLoad' ||
+                  user_role_id != 4
+                "
                 class="customFont"
                 :active-class="'active-tab'"
                 >តារាងទម្លាប់សិក្សា</VTab
@@ -675,6 +772,7 @@ onMounted(() => {
                   <!-- v-if="isSecondary || isHighschool" -->
                   <div style="width: 200px">
                     <VTextField
+                      v-if="hasPrimarySubject || user_role_id != 4"
                       class="customFont"
                       density="compact"
                       label="បញ្ចូលតួចែក"
@@ -702,10 +800,11 @@ onMounted(() => {
               </VWindowItem>
 
               <VWindowItem
-                v-if="teacherRole == 'classLoad'"
+                v-if="teacherRole == 'classLoad' || user_role_id != 4"
                 value="studentHabit"
               >
                 <v-table
+                  v-if="student_habits"
                   fixed-header
                   height="460"
                   class="customFont border border-2 border-black table"
@@ -854,9 +953,12 @@ onMounted(() => {
                 </v-table>
                 <div class="d-flex justify-end mt-2">
                   <VBtn
-                    @click="addStudentHabit"
+                    v-if="student_habits"
+                    :loading="loadingStudentHabit"
+                    :disabled="loadingStudentHabit"
                     variant="tonal"
                     color="green customFont"
+                    @click="addStudentHabit"
                     >បញ្ជូន</VBtn
                   >
                 </div>

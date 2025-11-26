@@ -145,7 +145,12 @@ onMounted(() => {});
         >
           {{ s.name }}
         </th>
-        <th class="text-left py-2 px-8 border">សកម្មភាព</th>
+        <th
+          v-if="user_role_id != 4 || user_role_id != '4'"
+          class="text-left py-2 px-8 border"
+        >
+          សកម្មភាព
+        </th>
       </tr>
     </thead>
 
@@ -185,7 +190,10 @@ onMounted(() => {});
         </td>
 
         <!-- Action Column -->
-        <td class="border text-center">
+        <td
+          class="border text-center"
+          v-if="user_role_id != 4 || user_role_id != '4'"
+        >
           <VBtn
             variant="outlined"
             color="red"

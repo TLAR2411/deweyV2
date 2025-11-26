@@ -11,6 +11,10 @@ const campus_id = ref(settingStore.campus_id);
 
 const users = ref([]);
 
+const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
+
+const user_role_id = ref(parseInt(user.value.role_id));
+
 const isloading = ref(false);
 
 const getAllUser = async () => {

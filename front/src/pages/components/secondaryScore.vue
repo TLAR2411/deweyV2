@@ -153,7 +153,12 @@ console.log("propLevel", typeof props.level);
           {{ s.name }}
         </th>
 
-        <th class="text-left py-2 px-8 border">សកម្មភាព</th>
+        <th
+          v-if="user_role_id != 4 || user_role_id != '4'"
+          class="text-left py-2 px-8 border"
+        >
+          សកម្មភាព
+        </th>
       </tr>
     </thead>
 
@@ -308,7 +313,10 @@ console.log("propLevel", typeof props.level);
             v-model="item.computer"
           />
         </td> -->
-        <td class="border text-center">
+        <td
+          v-if="user_role_id != 4 || user_role_id != '4'"
+          class="border text-center"
+        >
           <VBtn
             variant="outlined"
             color="red"
