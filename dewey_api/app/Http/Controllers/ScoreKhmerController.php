@@ -441,7 +441,7 @@ class ScoreKhmerController extends Controller
                         'homework' => $student['homework'] ?? null,
                         'healthy' => $student['healthy'] ?? null,
                         'steam' => $student['steam'] ?? null,
-                        // 'approved'=>$student['approved']??0
+                        'approved' => $student['approved'] ?? 0
                     ];
                     // 
                 }
@@ -483,7 +483,6 @@ class ScoreKhmerController extends Controller
                     }, ARRAY_FILTER_USE_KEY);
                     foreach ($students as $student) {
                         $array_save2[] = [
-
                             // change id to student_id
                             'student_id' => $student['student_id'],
                             'class_id' => $student['class_id'],
@@ -513,7 +512,6 @@ class ScoreKhmerController extends Controller
                     $data = DB::table('score_primary_cc')
                         ->insert($array_save2);
                     if ($data) {
-
                         $time = now()->toDateTimeString();
                         $userId = Auth::id();
                         $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()}";
@@ -538,9 +536,16 @@ class ScoreKhmerController extends Controller
                     }
                 } catch (\Throwable $th) {
                     DB::rollBack();
+                    return response()->json([
+                        "message" => "បរាជ័យក្នុងការបញ្ចូលពិន្ទុ",
+                        "status" => 1
+                    ]);
                 }
             }
         }
+
+
+
 
         // Add score Secondary
         elseif ($request->edu_id == 2) {
@@ -549,8 +554,6 @@ class ScoreKhmerController extends Controller
                 return response()->json(["message" => "សូមបញ្ចូលតួរចែកនៅខាងក្រោម", "isAlert" => "avg_m"]);
             }
             if ($request->status == 1) {
-
-
                 $students = array_filter($request->all(), function ($key) {
                     return is_numeric($key);
                 }, ARRAY_FILTER_USE_KEY);
@@ -607,16 +610,20 @@ class ScoreKhmerController extends Controller
                     );
                 }
             } else {
-                $array_save2 = [];
-                $del = DB::table('score_secondary_cc')
-                    ->where('class_id', $request->class_id)
-                    ->where('month_id', $request->month_id)
-                    ->delete();
+                try {
+                    DB::beginTransaction();
+                    $del = DB::table('score_secondary_cc')
+                        ->where('class_id', $request->class_id)
+                        ->where('month_id', $request->month_id)
+                        ->delete();
 
-                $students = array_filter($request->all(), function ($key) {
-                    return is_numeric($key);
-                }, ARRAY_FILTER_USE_KEY);
-                if ($del) {
+                    $array_save2 = [];
+
+                    $students = array_filter($request->all(), function ($key) {
+                        return is_numeric($key);
+                    }, ARRAY_FILTER_USE_KEY);
+
+
                     foreach ($students as $student) {
                         $array_save2[] = [
                             'student_id' => $student['student_id'],
@@ -642,33 +649,49 @@ class ScoreKhmerController extends Controller
 
                         ];
                     }
-                }
-                $data = DB::table('score_secondary_cc')
-                    ->insert($array_save2);
 
-                if ($data) {
-                    $time = now()->toDateTimeString();
-                    $userId = Auth::id();
-                    $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()}";
-                    Storage::append("logs/score.txt", $message);
-                    return response()->json(
-                        [
-                            "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
-                            "status" => 0
+                    $data = DB::table('score_secondary_cc')
+                        ->insert($array_save2);
 
-                        ]
-                    );
-                } else {
-                    return response()->json(
-                        [
-                            "message" => "Something Wrong !",
-                            "status" => 1
+                    // return response()->json(['message' => $data]);
 
-                        ]
-                    );
+                    if ($data) {
+                        $time = now()->toDateTimeString();
+                        $userId = Auth::id();
+                        $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()}";
+                        Storage::append("logs/score.txt", $message);
+
+                        DB::commit();
+                        return response()->json(
+                            [
+                                "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
+                                "status" => 0
+
+                            ]
+                        );
+                    } else {
+                        DB::rollBack();
+                        return response()->json(
+                            [
+                                "message" => "Something Wrong !",
+                                "status" => 1
+
+                            ]
+                        );
+                    }
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return response()->json([
+                        "message" => "បរាជ័យក្នុងការបញ្ចូលពិន្ទុ",
+                        "status" => 1
+                    ]);
                 }
             }
         }
+
+
+
+
 
         // High school
         else {
@@ -708,7 +731,6 @@ class ScoreKhmerController extends Controller
                 $data = DB::table('score_upper_cc')->insert($array_save);
 
                 if ($data) {
-
                     $time = now()->toDateTimeString();
                     $userId = Auth::id();
                     $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()} ";
@@ -729,61 +751,74 @@ class ScoreKhmerController extends Controller
                     );
                 }
             } else {
-                $array_save2 = [];
-                $del = DB::table('score_upper_cc')
-                    ->where('class_id', $request->class_id)
-                    ->where('month_id', $request->month_id)
-                    ->delete();
 
-                $students = array_filter($request->all(), function ($key) {
-                    return is_numeric($key);
-                }, ARRAY_FILTER_USE_KEY);
+                try {
+                    DB::beginTransaction();
 
-                if ($del) {
-                    foreach ($students as $student) {
-                        $array_save2[] = [
-                            'student_id' => $student['student_id'],
-                            'class_id' => $student['class_id'],
-                            'month_id' => $student['month_id'],
-                            'avg_m' => $student['avg_m'],
-                            'khmer' => $student['khmer'] ?? null,
-                            'morality' => $student['morality'] ?? null,
-                            'history' => $student['history'] ?? null,
-                            'geography' => $student['geography'] ?? null,
-                            'math' => $student['math'] ?? null,
-                            'physical' => $student['physical'] ?? null,
-                            'chemistry' => $student['chemistry'] ?? null,
-                            'biology' => $student['biology'] ?? null,
-                            'earth_science' => $student['earth_science'] ?? null,
-                            'english' => $student['english'] ?? null,
-                            'pe' => $student['pe'] ?? null,
-                            'computer' => $student['computer'] ?? null,
-                            'approved' => $student['approved'] ?? 0
-                        ];
+                    $array_save2 = [];
+                    $del = DB::table('score_upper_cc')
+                        ->where('class_id', $request->class_id)
+                        ->where('month_id', $request->month_id)
+                        ->delete();
+
+                    $students = array_filter($request->all(), function ($key) {
+                        return is_numeric($key);
+                    }, ARRAY_FILTER_USE_KEY);
+
+                    if ($del) {
+                        foreach ($students as $student) {
+                            $array_save2[] = [
+                                'student_id' => $student['student_id'],
+                                'class_id' => $student['class_id'],
+                                'month_id' => $student['month_id'],
+                                'avg_m' => $student['avg_m'],
+                                'khmer' => $student['khmer'] ?? null,
+                                'morality' => $student['morality'] ?? null,
+                                'history' => $student['history'] ?? null,
+                                'geography' => $student['geography'] ?? null,
+                                'math' => $student['math'] ?? null,
+                                'physical' => $student['physical'] ?? null,
+                                'chemistry' => $student['chemistry'] ?? null,
+                                'biology' => $student['biology'] ?? null,
+                                'earth_science' => $student['earth_science'] ?? null,
+                                'english' => $student['english'] ?? null,
+                                'pe' => $student['pe'] ?? null,
+                                'computer' => $student['computer'] ?? null,
+                                'approved' => $student['approved'] ?? 0
+                            ];
+                        }
+                        $data = DB::table('score_upper_cc')
+                            ->insert($array_save2);
+
+                        if ($data) {
+                            $time = now()->toDateTimeString();
+                            $userId = Auth::id();
+                            $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()} ";
+                            Storage::append("logs/score.txt", $message);
+                            DB::commit();
+                            return response()->json(
+                                [
+                                    "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
+                                    "status" => 0
+                                ]
+                            );
+                        } else {
+                            DB::rollBack();
+                            return response()->json(
+                                [
+                                    "message" => "Something Wrong !",
+                                    "status" => 1
+
+                                ]
+                            );
+                        }
                     }
-                    $data = DB::table('score_upper_cc')
-                        ->insert($array_save2);
-
-                    if ($data) {
-                        $time = now()->toDateTimeString();
-                        $userId = Auth::id();
-                        $message = "userId:{$userId} | eduId:{$request->edu_id} | time:{$time} | Path: {$request->path()} ";
-                        Storage::append("logs/score.txt", $message);
-                        return response()->json(
-                            [
-                                "message" => "ពិន្ទុបញ្ចូលបានដោយជោគជ័យ",
-                                "status" => 0
-                            ]
-                        );
-                    } else {
-                        return response()->json(
-                            [
-                                "message" => "Something Wrong !",
-                                "status" => 1
-
-                            ]
-                        );
-                    }
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return response()->json([
+                        "message" => "បរាជ័យក្នុងការបញ្ចូលពិន្ទុ",
+                        "status" => 1
+                    ]);
                 }
             }
         }
