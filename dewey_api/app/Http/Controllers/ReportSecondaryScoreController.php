@@ -624,18 +624,24 @@ class ReportSecondaryScoreController extends Controller
             $semester2 = number_format($student['average_semester2'], 2, '.', '');
             $total_sum = number_format(($student['average_semester1'] + $student['average_semester2']) / 2, 2);
             return [
+                'student_id' => $student['student_id'],
                 'kh_name' => $student['kh_name'],
                 'en_name' => $student['en_name'],
                 'gender' => $student['gender'],
                 'photo_path' => $student['photo_path'],
                 'average_semester1' => $semester1,
                 'average_semester2' => $semester2,
+                'grade1' => $this->getGradeSecondary($semester1),
+                'grade2' => $this->getGradeSecondary($semester2),
                 'average_year' => $total_sum,
                 // 'photo_path' => $student['photo_path'],
                 'grade' => $this->getGradeSecondary($total_sum),
                 'type' => 'All'
             ];
         }, array_values($yearly));
+
+        $processed = $this->addRank($processed, 'average_semester1', 'rank1');
+        $processed = $this->addRank($processed, 'average_semester2', 'rank2');
 
         $sorted = $this->sortAndRank($processed, 'average_year');
         return response()->json([

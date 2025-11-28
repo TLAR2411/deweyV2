@@ -13,6 +13,9 @@ const props = defineProps({
   },
 });
 
+const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
+const user_role_id = ref(parseInt(user.value.role_id));
+
 console.log("subjjjjjjj", props.subject);
 
 console.log("prop", props.level);
@@ -132,12 +135,28 @@ const handlePaste = (event, rowIndex, startField) => {
         <th style="height: 0px" class="text-left py-2 px-8 border">និយាយ</th>
         <th style="height: 0px" class="text-left py-2 px-8 border">អំណាន</th>
         <th style="height: 0px" class="text-left py-2 px-8 border">សរសេរ</th>
-        <th style="height: 0px" class="text-left py-2 px-8 border">
+        <!-- <th style="height: 0px" class="text-left py-2 px-8 border">
+          តែងសេចក្ដី
+        </th> -->
+        <th
+          style="height: 0px"
+          class="text-left py-2 px-8 border"
+          v-if="props.level != 1 && props.level != 2"
+        >
           តែងសេចក្ដី
         </th>
-        <th style="height: 0px" class="text-left py-2 px-8 border">
+
+        <!-- <th style="height: 0px" class="text-left py-2 px-8 border">
+          វេយ្យាករណ៍
+        </th> -->
+        <th
+          style="height: 0px"
+          class="text-left py-2 px-8 border"
+          v-if="props.level != 1 && props.level != 2"
+        >
           វេយ្យាករណ៍
         </th>
+
         <th style="height: 0px" class="text-left py-2 px-8 border">
           គណិតវិទ្យា
         </th>
@@ -156,12 +175,34 @@ const handlePaste = (event, rowIndex, startField) => {
           អក្សរផ្ចង់
         </th>
         <th style="height: 0px" class="text-left py-2 px-8 border">អប់រំកាយ</th>
-        <th style="height: 0px" class="text-left py-2 px-8 border">
+
+        <!-- <th style="height: 0px" class="text-left py-2 px-8 border">
+          កិច្ចការផ្ទះ
+        </th> -->
+
+        <th
+          style="height: 0px"
+          class="text-left py-2 px-8 border"
+          v-if="props.level == 5 || props.level == 6"
+        >
           កិច្ចការផ្ទះ
         </th>
-        <th style="height: 0px" class="text-left py-2 px-8 border">អនាម័យ</th>
+
+        <th
+          style="height: 0px"
+          class="text-left py-2 px-8 border"
+          v-if="props.level == 5 || props.level == 6"
+        >
+          អនាម័យ
+        </th>
         <th style="height: 0px" class="text-left py-2 px-8 border">STEAM</th>
-        <th style="height: 0px" class="text-left py-2 px-8 border">សកម្មភាព</th>
+        <th
+          style="height: 0px"
+          class="text-left py-2 px-8 border"
+          v-if="user_role_id != 4 || user_role_id != '4'"
+        >
+          សកម្មភាព
+        </th>
       </tr>
     </thead>
 
@@ -206,7 +247,16 @@ const handlePaste = (event, rowIndex, startField) => {
             v-model="item.writing"
           />
         </td>
-        <td class="border">
+        <td class="border" v-if="props.level != 1 && props.level != 2">
+          <VTextField
+            @paste.native="(e) => handlePaste(e, rowIndex, 'essay')"
+            hide-details
+            density="compact"
+            variant="outlined"
+            v-model="item.essay"
+          />
+        </td>
+        <!-- <td class="border">
           <VTextField
             :readonly="props.level == 1 || props.level == 2"
             :disabled="props.level == 1 || props.level == 2"
@@ -225,29 +275,34 @@ const handlePaste = (event, rowIndex, startField) => {
                   : $event.target.value
             "
           />
+        </td> -->
+
+        <td class="border" v-if="props.level != 1 && props.level != 2">
+          <VTextField
+            @paste.native="(e) => handlePaste(e, rowIndex, 'grammar')"
+            hide-details
+            density="compact"
+            variant="outlined"
+            v-model="item.grammar"
+          />
         </td>
-        <td class="border">
+
+        <!-- <td class="border">
           <VTextField
             :readonly="props.level == 1 || props.level == 2"
             :disabled="props.level == 1 || props.level == 2"
             :class="
               props.level == 1 || props.level == 2 ? 'bg-grey-lighten-3' : ''
             "
-            @paste.native="(e) => handlePaste(e, rowIndex, 'grammar')"
             hide-details
             density="compact"
             variant="outlined"
             :value="
               props.level == 1 || props.level == 2 ? '0.0.1' : item.grammar
             "
-            @input="
-              item.grammar =
-                props.level == 1 || props.level == 2
-                  ? '0.0.1'
-                  : $event.target.value
-            "
+            v-model="item.grammar"
           />
-        </td>
+        </td> -->
         <td class="border">
           <VTextField
             @paste.native="(e) => handlePaste(e, rowIndex, 'math')"
@@ -320,7 +375,7 @@ const handlePaste = (event, rowIndex, startField) => {
             v-model="item.pe"
           />
         </td>
-        <td class="border">
+        <!-- <td class="border">
           <VTextField
             :readonly="
               props.level == 1 ||
@@ -364,8 +419,18 @@ const handlePaste = (event, rowIndex, startField) => {
                   : $event.target.value
             "
           />
+        </td> -->
+        <td class="border" v-if="props.level == 5 || props.level == 6">
+          <VTextField
+            @paste.native="(e) => handlePaste(e, rowIndex, 'homework')"
+            hide-details
+            density="compact"
+            variant="outlined"
+            v-model="item.homework"
+          />
         </td>
-        <td class="border">
+
+        <!-- <td class="border">
           <VTextField
             :readonly="
               props.level == 1 ||
@@ -409,7 +474,17 @@ const handlePaste = (event, rowIndex, startField) => {
                   : $event.target.value
             "
           />
+        </td> -->
+        <td class="border" v-if="props.level == 5 || props.level == 6">
+          <VTextField
+            @paste.native="(e) => handlePaste(e, rowIndex, 'healthy')"
+            hide-details
+            density="compact"
+            variant="outlined"
+            v-model="item.healthy"
+          />
         </td>
+
         <td class="border">
           <VTextField
             @paste.native="(e) => handlePaste(e, rowIndex, 'steam')"
@@ -419,7 +494,10 @@ const handlePaste = (event, rowIndex, startField) => {
             v-model="item.steam"
           />
         </td>
-        <td class="border text-center">
+        <td
+          class="border text-center"
+          v-if="user_role_id != 4 || user_role_id != '4'"
+        >
           <VBtn
             variant="outlined"
             color="red"

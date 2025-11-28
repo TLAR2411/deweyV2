@@ -1721,7 +1721,7 @@ onMounted(() => {
                     <div>
                       <v-table
                         class="customFont battambang-thin table"
-                        style="font-size: 10px; color: black; width: 100%"
+                        style="font-size: 11px; color: black; width: 100%"
                       >
                         <tr>
                           <th
@@ -1731,7 +1731,7 @@ onMounted(() => {
                             ល.រ
                           </th>
                           <th
-                            style="height: 59px; width: 25%"
+                            style="height: 59px; width: 10%"
                             class="text-center pa-0 font-weight-bold"
                           >
                             ឈ្មោះសិស្ស

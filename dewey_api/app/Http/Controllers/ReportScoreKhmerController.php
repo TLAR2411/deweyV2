@@ -193,23 +193,24 @@ class ReportScoreKhmerController extends Controller
                 'avg' => number_format($student->total_avg, 2, '.', ''),
                 'grade' => $this->getGradePrimary($avg),
                 'photo_path' => $student->photo_path,
-                'listent' => $student->listent,
-                'speaking' => $student->speaking,
-                'writing' => $student->writing,
-                'reading' => $student->reading,
-                'essay' => $student->essay,
-                'grammar' => $student->grammar,
-                'math' => $student->math,
-                'chemistry' => $student->chemistry,
-                'physical' => $student->physical,
-                'history' => $student->history,
-                'morality' => $student->morality,
-                'art' => $student->art,
-                'word' => $student->word,
-                'pe' => $student->pe,
-                'homework' => $student->homework,
-                'healthy' => $student->healthy,
-                'steam' => $student->steam,
+                // 'listent' => $student->listent,
+                'listent' => number_format($student->listent, 2, '.', ''),
+                'speaking' => number_format($student->speaking, 2, '.', ''),
+                'writing' => number_format($student->writing, 2, '.', ''),
+                'reading' => number_format($student->reading, 2, '.', ''),
+                'essay' => number_format($student->essay, 2, '.', ''),
+                'grammar' => number_format($student->grammar, 2, '.', ''),
+                'math' => number_format($student->math, 2, '.', ''),
+                'chemistry' => number_format($student->chemistry, 2, '.', ''),
+                'physical' => number_format($student->physical, 2, '.', ''),
+                'history' => number_format($student->history, 2, '.', ''),
+                'morality' => number_format($student->morality, 2, '.', ''),
+                'art' => number_format($student->art, 2, '.', ''),
+                'word' => number_format($student->word, 2, '.', ''),
+                'pe' => number_format($student->pe, 2, '.', ''),
+                'homework' => number_format($student->homework, 2, '.', ''),
+                'healthy' => number_format($student->healthy, 2, '.', ''),
+                'steam' => number_format($student->steam, 2, '.', ''),
                 'type' => $type,
 
             ];
@@ -1008,7 +1009,7 @@ class ReportScoreKhmerController extends Controller
         }
 
         // Process yearly average
-        $processed = array_map(function ($student) use ($gradeLevel) {
+        $processed = array_map(function ($student) use ($gradeLevel, $semester1) {
 
             $allMonths =  array_merge($student['months1'], $student['months2']);
 
@@ -1065,6 +1066,8 @@ class ReportScoreKhmerController extends Controller
                 'months2' => $student['months2'],
                 'rank1' => $student['rank1'],
                 'rank2' => $student['rank2'],
+                'grade1' => $this->getGradePrimary($semester1),
+                'grade2' => $this->getGradePrimary($semester2),
                 'math1'             => $student['math1'] ?? number_format(0, 2, '.', ''),
                 'math2'             => $student['math2'] ?? number_format(0, 2, '.', ''),
                 'rankMath1'             => $student['rankMath1'],

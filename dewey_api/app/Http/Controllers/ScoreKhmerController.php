@@ -70,6 +70,7 @@ class ScoreKhmerController extends Controller
                     ->join('classrooms', 'student_class.class_id', '=', 'classrooms.id')
                     ->where('classrooms.id', $request->class_id)
                     ->where('student_class.deleted', 0)
+                    // ->where('student_class.is_transfer', 0)
                     // ->whereRaw('student_class.student_id NOT IN (SELECT student_id from score_primary_cc where student_class.class_id=' . $request->class_id . ' and
                     //     score_primary_cc.month_id = ' . $request->month_id . ' )')
                     ->whereRaw('student_class.student_id NOT IN (SELECT student_id from score_primary_cc where score_primary_cc.class_id=' . $request->class_id . ' and
@@ -269,13 +270,12 @@ class ScoreKhmerController extends Controller
             $currentMonth = (int) $now->format('m');
             $scoreMonth = (int) $request->month_id;
 
-            if ($scoreMonth !== $currentMonth) {
+            if ($scoreMonth < $currentMonth) {
                 return response()->json([
                     "message" => "មិនអាចបញ្ចូលពិន្ទុខែចាស់បានទេ",
                     "status" => 1
                 ]);
             }
-
 
             if ($currentDay >= 27 || $currentDay >= '27') {
                 if ($request->approve == 1) {

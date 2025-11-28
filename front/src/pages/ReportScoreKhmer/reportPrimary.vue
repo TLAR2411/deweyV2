@@ -2635,7 +2635,7 @@ onMounted(async () => {
                         </template>
 
                         <template v-else>
-                          <tr>
+                          <tr style="font-size: 10px">
                             <th
                               style="height: 0px; width: 1%"
                               class="text-center pa-0 font-weight-bold"
@@ -2644,9 +2644,9 @@ onMounted(async () => {
                             </th>
                             <th
                               :style="
-                                form.type == 'month' ? 'width:20%' : 'width:5%'
+                                form.type == 'month' ? 'width:7%' : 'width:10%'
                               "
-                              style="height: 59px; width: 9%"
+                              style="height: 59px"
                               class="text-center pa-0 font-weight-bold"
                             >
                               ឈ្មោះសិស្ស
@@ -3112,7 +3112,7 @@ onMounted(async () => {
                           </th> -->
                             <th
                               :style="
-                                form.type == 'month' ? 'width:7%' : 'width:8%'
+                                form.type == 'month' ? 'width:5%' : 'width:5%'
                               "
                               style="height: 0px"
                               class="text-center semesterFieldHeader font-weight-bold"
@@ -3122,7 +3122,10 @@ onMounted(async () => {
                           </tr>
                         </template>
 
-                        <tbody class="customFont text-center">
+                        <tbody
+                          class="customFont text-center"
+                          style="font-size: 11px"
+                        >
                           <tr v-for="(item, idx) in reportData" :key="idx">
                             <td style="height: 0; padding: 1px">
                               {{ idx + 1 }}

@@ -703,6 +703,8 @@ class ReportScoreUpperController extends Controller
         $semester2 = is_array($semester2) ? $semester2 : (json_decode($semester2, true) ?? []);
         $combined = array_merge($semester1, $semester2);
 
+
+
         // return response()->json($combined);
 
 
@@ -716,6 +718,7 @@ class ReportScoreUpperController extends Controller
                     'en_name' => $student['en_name'],
                     'photo_path' => $student['photo_path'] ?? null,
                     'gender' => $student['gender'],
+                    // 'rank1'=>$student['rank1']
                     'average_semester1' => 0,
                     'average_semester2' => 0,
                 ];
@@ -732,6 +735,7 @@ class ReportScoreUpperController extends Controller
             $semester2 = number_format($student['average_semester2'], 2, '.', '');
             $total_sum = number_format(($student['average_semester1'] + $student['average_semester2']) / 2, 2);
             return [
+                'student_id' => $student['student_id'],
                 'kh_name' => $student['kh_name'],
                 'en_name' => $student['en_name'],
                 'gender' => $student['gender'],
@@ -740,11 +744,14 @@ class ReportScoreUpperController extends Controller
                 'average_semester2' => $semester2,
                 'average_year' => $total_sum,
                 'grade' => $this->getGradeUpper($total_sum),
+                'grade1' => $this->getGradeUpper($semester1),
+                'grade2' => $this->getGradeUpper($semester2),
                 'type' => 'All'
             ];
         }, array_values($yearly));
 
-
+        $processed = $this->addRank($processed, 'average_semester1', 'rank1');
+        $processed = $this->addRank($processed, 'average_semester2', 'rank2');
 
         $sorted = $this->sortAndRank($processed, 'average_year');
         // return response()->json($sorted);

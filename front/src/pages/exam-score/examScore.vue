@@ -294,6 +294,11 @@ const addScore = async () => {
             title: res.data.message,
             icon: "error",
           });
+        } else if (res.data.status == 1) {
+          Toast.fire({
+            title: res.data.message,
+            icon: "error",
+          });
         } else {
           Toast.fire({
             title: res.data.message,

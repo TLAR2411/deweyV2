@@ -794,7 +794,7 @@ onMounted(() => {
           <v-card-title
             class="customKhmerMoul text-green-darken-4 bg-grey-lighten-4 py-4 text-center"
           >
-            របាយការណ៍កម្មវិធីខ្មែរ ថ្នាក់បឋម
+            របាយការណ៍កម្មវិធីខ្មែរ ថ្នាក់អនុវិទ្យាល័យ
           </v-card-title>
 
           <div class="mt-3">
@@ -1677,9 +1677,9 @@ onMounted(() => {
                     <div>
                       <v-table
                         class="customFont battambang-thin table"
-                        style="font-size: 10px; color: black; width: 100%"
+                        style="font-size: 13px; color: black; width: 100%"
                       >
-                        <tr class="customFont">
+                        <tr class="customFont" style="font-size: 11px">
                           <th
                             style="height: 0px; width: 2%"
                             class="text-center pa-0 font-weight-bold"
@@ -1687,7 +1687,7 @@ onMounted(() => {
                             ល.រ
                           </th>
                           <th
-                            style="height: 60px; width: 17%"
+                            style="height: 50px; width: 10%"
                             class="text-center pa-0 font-weight-bold"
                           >
                             ឈ្មោះសិស្ស
